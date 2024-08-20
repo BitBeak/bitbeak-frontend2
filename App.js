@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { AuthProvider } from './src/context/AuthContext';
 import InitialScreen from './src/screens/InitialScreen';
+import LoginScreen from './src/screens/LoginScreen'
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,7 @@ export default function App() {
           }}
         >
           <Stack.Screen name="InitialScreen" component={InitialScreen} />
+          <Stack.Screen name="LoginScreen" component={LoginScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
