@@ -43,7 +43,8 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const navigateToSignUpScreen = () => {
-    navigation.navigate('SignUpScreen');
+    // TODO: Navegação temporária para a tela de ranqueamento, posteriormente alterar a navegação para a tela de cadastro
+    navigation.navigate('RankingScreen');
   };
 
   if (!fontsLoaded) {
