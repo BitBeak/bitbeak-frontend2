@@ -1,31 +1,60 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Text, FlatList, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import RankingItem from '../components/RankingItem';
 import NavBar from '../components/NavBar.js';
 
-const data = [
-  { id: '1', name: 'Dwayne "THE DUCK" Johnson', score: 1120, rank: 1, avatar: require('../../assets/bitbeak-logo.png') },
-  { id: '2', name: 'Duke the Duck', score: 1082, rank: 2, avatar: require('../../assets/bitbeak-logo.png') },
-  { id: '3', name: 'Duck Norris', score: 1066, rank: 3, avatar: require('../../assets/bitbeak-logo.png') },
-  { id: '4', name: 'Duck Vader', score: 1001, rank: 4, avatar: require('../../assets/bitbeak-logo.png') },
-  { id: '5', name: 'Ana Quackstela', score: 830, rank: 5, avatar: require('../../assets/bitbeak-logo.png') },
-  { id: '18', name: 'Você', score: 238, rank: 18, avatar: require('../../assets/bitbeak-logo.png') },
-];
-
 export default function RankingScreen({ navigation }) {
+  const [topUsuarios, setTopUsuarios] = useState([]);
+  const [posicaoAtual, setPosicaoAtual] = useState(null);
+
+  useEffect(() => {
+    console.log("useEffect executado");
+
+    const fetchRanking = async () => {
+      try {
+        console.log("Tentando buscar os dados...");
+
+        const response = await axios.get('http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/1');
+        console.log(response.data);
+
+        setTopUsuarios(response.data.topUsuarios);
+        setPosicaoAtual(response.data.posicaoAtual);
+
+      } catch (error) {
+        console.error('Erro ao buscar os dados do ranking:', error.response ? error.response.data : error.message);
+      }
+    };
+
+    fetchRanking();
+  }, []);
+
   return (
     <LinearGradient colors={['#012768', '#006FC2']} style={styles.container}>
       <Header />
       <Text style={styles.header}>RANKING</Text>
       <Text style={styles.subHeader}>Atualizado quinzenalmente! Quanto melhor colocado, mais penas você ganha!</Text>
       <FlatList
-        data={data.slice(0, 7)} 
-        renderItem={({ item }) => <RankingItem item={item} />}
-        keyExtractor={item => item.id}
+        data={topUsuarios.length > 0 ? topUsuarios : []}
+        renderItem={({ item }) => (
+          <RankingItem item={{
+            id: item.idUsuario,
+            name: item.nome,
+            score: item.experienciaQuinzenal,
+            rank: item.posicao,
+            avatar: require('../../assets/bitbeak-logo.png')
+          }} />
+        )}
+        keyExtractor={item => item.idUsuario.toString()}
         contentContainerStyle={styles.listContainer}
       />
+      {posicaoAtual && (
+        <Text style={styles.posicaoAtual}>
+          Sua posição atual: {posicaoAtual.nome} - Posição: {posicaoAtual.posicao}
+        </Text>
+      )}
       <NavBar navigation={navigation} />
     </LinearGradient>
   );
@@ -52,5 +81,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
+  },
+  posicaoAtual: {
+    color: '#FFF',
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 10,
+    fontWeight: 'bold',
   },
 });
