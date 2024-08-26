@@ -3,7 +3,7 @@ import React, { createContext, useState } from 'react';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [users, setUsers] = useState([]);
+  const [user, setUser] = useState(null);
   const [xp, setXp] = useState(0);
   const [feathers, setFeathers] = useState(0);
   const [level, setLevel] = useState(0);
@@ -15,12 +15,9 @@ export const AuthProvider = ({ children }) => {
     { id: 5, title: 'Trilha V: Algoritmos Avançados', levelsCompleted: 0, totalLevels: 5, unlocked: false },
   ]);
 
-  const registerUser = (email, password) => {
-    setUsers(prevUsers => [...prevUsers, { email, password }]);
-  };
-
-  const validateUser = (email, password) => {
-    return users.some(user => user.email === email && user.password === password);
+  // Função para definir os dados do usuário logado após a autenticação
+  const setUserFromApi = (userData) => {
+    setUser(userData);
   };
 
   const addXp = (amount) => {
@@ -55,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ registerUser, validateUser, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
+    <AuthContext.Provider value={{ user, setUser: setUserFromApi, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
-  const { validateUser } = useContext(AuthContext);
+  const { setUser } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -33,24 +33,87 @@ const LoginScreen = ({ navigation }) => {
     }, [])
   );
 
-  const handleLogin = () => {
-    if (validateUser(email, password)) {
-      console.log('Login successful');
-      navigation.navigate('HomeScreen');
-    } else {
-      setError('E-mail ou senha incorretos.');
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateInputs = () => {
+    if (!email) {
+      setError('O e-mail é obrigatório.');
+      return false;
+    }
+    if (!validateEmail(email)) {
+      setError('Insira um e-mail válido.');
+      return false;
+    }
+    if (!password) {
+      setError('A senha é obrigatória.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateInputs()) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://192.168.0.2:5159/api/Login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          senha: password,
+        }),
+      });
+
+      const text = await response.text();
+      console.log('Login API Response:', text);
+
+      let data;
+      if (response.headers.get('content-type')?.includes('application/json')) {
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError);
+          setError('Erro ao processar a resposta do servidor. Tente novamente.');
+          return;
+        }
+      } else {
+        if (text === 'Usuário não encontrado.' || text === 'Senha incorreta.') {
+          setError('E-mail e/ou senha incorreta.');
+        } else {
+          setError(text);
+        }
+        return;
+      }
+
+      if (response.ok) {
+        console.log('Login successful:', data);
+        setUser(data);
+        navigation.navigate('HomeScreen');
+      } else {
+        console.warn('Login failed:', data);
+        setError('E-mail e/ou senha incorreta.');
+      }
+    } catch (error) {
+      console.error('Network or server error:', error);
+      setError('Erro de conexão. Verifique sua internet e tente novamente.');
     }
   };
 
   const navigateToSignUpScreen = () => {
-    // TODO: Navegação temporária para a tela de ranqueamento, posteriormente alterar a navegação para a tela de cadastro
-    navigation.navigate('RankingScreen');
+    navigation.navigate('SignUpScreen');
   };
 
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text>Carregando fontes...</Text>
       </View>
     );
   }

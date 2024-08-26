@@ -4,6 +4,8 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import { AuthProvider } from './src/context/AuthContext';
 import InitialScreen from './src/screens/InitialScreen';
 import LoginScreen from './src/screens/LoginScreen'
+import SignUpScreen from './src/screens/SignUpScreen';
+import HomeScreen from './src/screens/HomeScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -35,6 +37,8 @@ export default function App() {
         >
           <Stack.Screen name="InitialScreen" component={InitialScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+          <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
