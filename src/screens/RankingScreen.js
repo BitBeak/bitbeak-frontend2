@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Text, FlatList, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,14 +16,16 @@ export default function RankingScreen({ navigation }) {
       try {
         console.log("Tentando buscar os dados...");
 
-        const response = await axios.get('http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/1');
-        console.log(response.data);
+        const response = await fetch('http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/1');
+        const data = await response.json();
 
-        setTopUsuarios(response.data.topUsuarios);
-        setPosicaoAtual(response.data.posicaoAtual);
+        console.log("Resposta recebida:", data);
+
+        setTopUsuarios(data.topUsuarios);
+        setPosicaoAtual(data.posicaoAtual);
 
       } catch (error) {
-        console.error('Erro ao buscar os dados do ranking:', error.response ? error.response.data : error.message);
+        console.error('Erro ao buscar os dados do ranking:', error.message);
       }
     };
 
