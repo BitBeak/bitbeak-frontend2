@@ -35,7 +35,7 @@ function NavItem({ icon, iconComponent: IconComponent = FontAwesome5, onPress, i
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={[styles.navIconContainer, isActive && styles.activeNavIcon]}>
-        <IconComponent name={icon} size={30} color="#FFFFFF" />
+        <IconComponent name={icon} size={30} color={"#FFFFFF"} /> 
       </View>
     </TouchableOpacity>
   );

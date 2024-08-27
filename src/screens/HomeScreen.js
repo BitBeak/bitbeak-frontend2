@@ -50,7 +50,8 @@ const HomeScreen = ({ navigation }) => {
 
   const handleScroll = (event) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
-    const index = Math.floor(event.nativeEvent.contentOffset.x / slideSize);
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffset / slideSize);
     setCurrentIndex(index);
   };
 
@@ -68,6 +69,7 @@ const HomeScreen = ({ navigation }) => {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
         >
           {trails.map((trail) => (
             <View key={trail.id} style={styles.trailContainer}>
@@ -95,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
             <View key={index} style={[styles.dot, currentIndex === index && styles.activeDot]} />
           ))}
         </View>
-        <Navbar navigation={navigation} style={styles.navbar} />
+        <Navbar navigation={navigation} currentScreen="HomeScreen" style={styles.navbar} />
       </LinearGradient>
     </SafeAreaProvider>
   );
@@ -119,6 +121,11 @@ const styles = StyleSheet.create({
   scrollView: {
     flexGrow: 0,
   },
+  scrollViewContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+  },
   trailContainer: {
     backgroundColor: '#74a7cc',
     borderRadius: 50,
@@ -131,9 +138,9 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 10,
     marginTop: 25,
-    marginLeft: 15,
-    marginRight: 15,
-    width: width * 0.88,
+    marginLeft: 1.5,
+    width: width * 0.94,
+    height: 320,
   },
   trailTitle: {
     color: '#FFFFFF',
