@@ -110,6 +110,10 @@ const LoginScreen = ({ navigation }) => {
     navigation.navigate('SignUpScreen');
   };
 
+  const navigateToPasswordResetScreen = () => {
+    navigation.navigate('PasswordResetScreen');
+  };
+
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
@@ -155,7 +159,7 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.registerButtonText}>Cadastre-se</Text>
         </TouchableOpacity>
         <TouchableOpacity>
-          <Text style={styles.footerText}>Esqueceu sua senha?</Text>
+          <Text style={styles.footerText} onPress={navigateToPasswordResetScreen}>Esqueceu sua senha?</Text>
         </TouchableOpacity>
       </LinearGradient>
     </SafeAreaView>
@@ -216,8 +220,8 @@ const styles = StyleSheet.create({
     color: '#012768',
   },
   toggleIcon: {
-    width: 34,
-    height: 34,
+    width: 24,
+    height: 24,
   },
   button: {
     width: 319,
@@ -256,8 +260,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorText: {
-    color: '#FFFFFF',
+    color: '#FF4D4D',
     marginBottom: 10,
+    fontSize: 14,
+    textAlign: 'center',
+    fontFamily: 'Mulish',
   },
   loadingContainer: {
     flex: 1,
