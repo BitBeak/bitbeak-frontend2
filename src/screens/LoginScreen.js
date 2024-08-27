@@ -71,23 +71,25 @@ const LoginScreen = ({ navigation }) => {
         }),
       });
 
-      const text = await response.text();
-      console.log('Login API Response:', text);
-
+      const contentType = response.headers.get('content-type');
       let data;
-      if (response.headers.get('content-type')?.includes('application/json')) {
+
+      if (contentType && contentType.includes('application/json')) {
         try {
-          data = JSON.parse(text);
-        } catch (parseError) {
-          console.error('Failed to parse response as JSON:', parseError);
+          data = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse response as JSON:', jsonError);
           setError('Erro ao processar a resposta do servidor. Tente novamente.');
           return;
         }
       } else {
+        const text = await response.text();
+        console.log('Login API Response:', text);
+
         if (text === 'Usuário não encontrado.' || text === 'Senha incorreta.') {
           setError('E-mail e/ou senha incorreta.');
         } else {
-          setError(text);
+          setError('Ocorreu um erro inesperado. Por favor, tente novamente.');
         }
         return;
       }

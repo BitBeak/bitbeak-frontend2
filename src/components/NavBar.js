@@ -1,24 +1,41 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-export default function NavBar({ navigation }) {
+export default function NavBar({ navigation, currentScreen }) {
   return (
-    // TODO: Alterar os ícones conforme o necessário, assim como a navegação para as telas correspondentes
     <View style={styles.navBar}>
-      <NavItem icon="home" onPress={() => navigation.navigate('HomeScreen')} />
-      <NavItem icon="bullseye" onPress={() => navigation.navigate('MissionScreen')} />
-      <NavItem icon="trophy" onPress={() => navigation.navigate('ChallengeScreen')} />
-      <NavItem icon="gift" onPress={() => navigation.navigate('RewardsScreen')} />
+      <NavItem 
+        icon="home" 
+        onPress={() => navigation.navigate('HomeScreen')} 
+        isActive={currentScreen === 'HomeScreen'}
+      />
+      <NavItem 
+        icon="bullseye" 
+        onPress={() => navigation.navigate('MissionScreen')} 
+        isActive={currentScreen === 'MissionScreen'}
+      />
+      <NavItem 
+        iconComponent={MaterialCommunityIcons} 
+        icon="sword-cross" 
+        onPress={() => navigation.navigate('RewardsScreen')} 
+        isActive={currentScreen === 'RewardsScreen'}
+      />
+      <NavItem 
+        icon="trophy" 
+        onPress={() => navigation.navigate('RankingScreen')} 
+        isActive={currentScreen === 'RankingScreen'}
+      />
     </View>
   );
 }
 
-function NavItem({ icon, onPress }) {
+function NavItem({ icon, iconComponent: IconComponent = FontAwesome5, onPress, isActive }) {
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={styles.navIconContainer}>
-        <FontAwesome5 name={icon} size={30} color="#FFFFFF" />
+      <View style={[styles.navIconContainer, isActive && styles.activeNavIcon]}>
+        <IconComponent name={icon} size={30} color="#FFFFFF" />
       </View>
     </TouchableOpacity>
   );
@@ -38,6 +55,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
     alignItems: 'center',
     justifyContent: 'center',
+    borderColor: '#FFFFFF',
+    borderWidth: 2,
+  },
+  activeNavIcon: {
+    backgroundColor: '#74a7cc',
     borderColor: '#FFFFFF',
     borderWidth: 2,
   },

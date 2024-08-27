@@ -1,7 +1,7 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import Icon from 'react-native-vector-icons/Feather';
 
 const Header = () => {
   const { xp, feathers, level } = useContext(AuthContext);
@@ -48,7 +48,7 @@ function ExpBar({ progress, level }) {
 function ExpDetails({ feathers }) {
   return (
     <View style={styles.expDetails}>
-      <Image source={require('../../assets/icons/feather-icon.png')} style={styles.featherIcon} />
+      <Icon name="feather" size={25} color="#FFFFFF" style={styles.featherIcon} />
       <Text style={styles.expPoints}>{feathers}</Text>
     </View>
   );
@@ -56,6 +56,7 @@ function ExpDetails({ feathers }) {
 
 const styles = StyleSheet.create({
   header: {
+    marginTop: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -65,6 +66,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 90,
     height: 100,
+    marginRight: 5
   },
   expBarWrapper: {
     flex: 1,
@@ -105,10 +107,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   featherIcon: {
-    width: 25,
-    height: 25,
     marginBottom: 5,
-    marginRight: 30,
+    marginRight: 40,
   },
   expPoints: {
     color: 'white',

@@ -4,6 +4,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [xp, setXp] = useState(0);
   const [feathers, setFeathers] = useState(0);
   const [level, setLevel] = useState(0);
@@ -18,6 +19,9 @@ export const AuthProvider = ({ children }) => {
   // Função para definir os dados do usuário logado após a autenticação
   const setUserFromApi = (userData) => {
     setUser(userData);
+    if (userData.idUsuario) {
+      setUserId(userData.idUsuario);
+    }
   };
 
   const addXp = (amount) => {
@@ -52,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser: setUserFromApi, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
+    <AuthContext.Provider value={{ user, userId, setUser: setUserFromApi, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
       {children}
     </AuthContext.Provider>
   );
