@@ -28,14 +28,12 @@ const HomeScreen = ({ navigation }) => {
       const progressResponse = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
       const progressData = await progressResponse.json();
 
-      // Atualiza os valores de xp, level e feathers no AuthContext
       setUserData({
         newLevel: progressData.nivelAtual,
         newXp: (progressData.experienciaUsuario / progressData.experienciaNecessaria) * 100,
         newFeathers: progressData.penas,
       });
 
-      // Atualiza os níveis concluídos para cada trilha
       await Promise.all(
         trails.map(async (trail) => {
           try {
@@ -48,7 +46,7 @@ const HomeScreen = ({ navigation }) => {
                 updateTrailProgress(trail.id, 0);
               } else {
                 console.warn(`Unexpected response text for trail ID ${trail.id}: ${textData}`);
-                updateTrailProgress(trail.id, 0); // Assume 0 níveis concluídos como fallback seguro
+                updateTrailProgress(trail.id, 0);
               }
             } else if (contentType && contentType.indexOf("application/json") !== -1) {
               const trailData = await response.json();
@@ -56,7 +54,7 @@ const HomeScreen = ({ navigation }) => {
             } else {
               const textData = await response.text();
               console.warn(`Unexpected content type or response for trail ID ${trail.id}: ${textData}`);
-              updateTrailProgress(trail.id, 0); // Assume 0 níveis concluídos como fallback seguro
+              updateTrailProgress(trail.id, 0);
             }
           } catch (error) {
             console.error(`Failed to fetch trail data for trail ID ${trail.id}:`, error);

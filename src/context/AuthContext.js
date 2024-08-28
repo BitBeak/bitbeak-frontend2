@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     { id: 1, title: 'Trilha I: Lógica de Programação', levelsCompleted: 0, totalLevels: 5, unlocked: true },
     { id: 2, title: 'Trilha II: Algoritmos', levelsCompleted: 0, totalLevels: 5, unlocked: false },
     { id: 3, title: 'Trilha III: Estruturas de Dados', levelsCompleted: 0, totalLevels: 5, unlocked: false },
-    { id: 4, title: 'Trilha IV: Programação Orientada a Objetos', levelsCompleted: 0, totalLevels: 5, unlocked: false },
+    { id: 4, title: 'Trilha IV: POO', levelsCompleted: 0, totalLevels: 5, unlocked: false },
     { id: 5, title: 'Trilha V: Algoritmos Avançados', levelsCompleted: 0, totalLevels: 5, unlocked: false },
   ]);
 
