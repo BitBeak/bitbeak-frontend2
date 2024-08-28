@@ -24,6 +24,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Função para definir vários dados do usuário a partir de uma única chamada
+  const setUserData = ({ newLevel, newXp, newFeathers }) => {
+    setLevel(newLevel);
+    setXp(newXp);
+    setFeathers(newFeathers);
+  };
+
   const addXp = (amount) => {
     setXp(prevXp => {
       const newXp = prevXp + amount;
@@ -56,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userId, setUser: setUserFromApi, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
+    <AuthContext.Provider value={{ user, userId, setUser: setUserFromApi, setUserData, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
       {children}
     </AuthContext.Provider>
   );

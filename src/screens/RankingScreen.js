@@ -51,11 +51,6 @@ export default function RankingScreen({ navigation }) {
         keyExtractor={item => item.idUsuario.toString()}
         contentContainerStyle={styles.listContainer}
       />
-      {posicaoAtual && (
-        <Text style={styles.posicaoAtual}>
-          Sua posição atual: {posicaoAtual.nome} - Posição: {posicaoAtual.posicao}
-        </Text>
-      )}
       <NavBar navigation={navigation} />
     </LinearGradient>
   );

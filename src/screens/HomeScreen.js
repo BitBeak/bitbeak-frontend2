@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ActivityIndicator, StyleSheet, View, Text, TouchableOpacity, ScrollView, Dimensions, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Font from 'expo-font';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import Header from '../components/Header';
@@ -10,27 +10,66 @@ import Navbar from '../components/NavBar.js';
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
-  const { xp, feathers, level, trails } = useContext(AuthContext);
-  const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [expProgress, setExpProgress] = useState(xp / 100);
+  const { userId, setUserData, trails, updateTrailProgress } = useContext(AuthContext);
+  const [fontsLoaded] = useFonts({
+    'Poppins-Bold': require('../../assets/fonts/Poppins-Bold.ttf'),
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      await Font.loadAsync({
-        'Poppins-Bold': require('../../assets/fonts/Poppins-Bold.ttf'),
+    if (fontsLoaded) {
+      fetchUserData();
+    }
+  }, [fontsLoaded]);
+
+  const fetchUserData = async () => {
+    try {
+      const progressResponse = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
+      const progressData = await progressResponse.json();
+
+      // Atualiza os valores de xp, level e feathers no AuthContext
+      setUserData({
+        newLevel: progressData.nivelAtual,
+        newXp: (progressData.experienciaUsuario / progressData.experienciaNecessaria) * 100,
+        newFeathers: progressData.penas,
       });
-      setFontsLoaded(true);
-    })();
-  }, []);
 
-  useEffect(() => {
-    setExpProgress(xp / 100);
-  }, [xp]);
+      // Atualiza os níveis concluídos para cada trilha
+      await Promise.all(
+        trails.map(async (trail) => {
+          try {
+            const response = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterNiveisConcluidos/${trail.id}/${userId}`);
+            const contentType = response.headers.get("content-type");
 
-  if (!fontsLoaded) {
-    return <ActivityIndicator size="large" />;
-  }
+            if (response.status === 400 || (contentType && contentType.indexOf("text/plain") !== -1)) {
+              const textData = await response.text();
+              if (textData.includes("Nenhum nível concluído encontrado")) {
+                updateTrailProgress(trail.id, 0);
+              } else {
+                console.warn(`Unexpected response text for trail ID ${trail.id}: ${textData}`);
+                updateTrailProgress(trail.id, 0); // Assume 0 níveis concluídos como fallback seguro
+              }
+            } else if (contentType && contentType.indexOf("application/json") !== -1) {
+              const trailData = await response.json();
+              updateTrailProgress(trail.id, trailData.quantidadeConcluida || 0);
+            } else {
+              const textData = await response.text();
+              console.warn(`Unexpected content type or response for trail ID ${trail.id}: ${textData}`);
+              updateTrailProgress(trail.id, 0); // Assume 0 níveis concluídos como fallback seguro
+            }
+          } catch (error) {
+            console.error(`Failed to fetch trail data for trail ID ${trail.id}:`, error);
+          }
+        })
+      );
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      Alert.alert("Erro", "Falha ao carregar os dados do servidor.");
+    }
+  };
 
   const handleEnterTrail = (trail) => {
     if (trail.unlocked) {
@@ -54,6 +93,10 @@ const HomeScreen = ({ navigation }) => {
     const index = Math.round(contentOffset / slideSize);
     setCurrentIndex(index);
   };
+
+  if (loading || !fontsLoaded) {
+    return <ActivityIndicator size="large" />;
+  }
 
   return (
     <SafeAreaProvider>
