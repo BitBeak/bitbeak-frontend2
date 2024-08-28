@@ -46,7 +46,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: 'transparent',
-    marginBottom: 50,
   },
   navIconContainer: {
     width: 60,

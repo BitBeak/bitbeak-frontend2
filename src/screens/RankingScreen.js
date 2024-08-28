@@ -1,36 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { Text, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { Text, FlatList, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import RankingItem from '../components/RankingItem';
 import NavBar from '../components/NavBar.js';
+import { AuthContext } from '../context/AuthContext';
 
 export default function RankingScreen({ navigation }) {
+  const { userId } = useContext(AuthContext);
   const [topUsuarios, setTopUsuarios] = useState([]);
   const [posicaoAtual, setPosicaoAtual] = useState(null);
 
   useEffect(() => {
-    console.log("useEffect executado");
-
     const fetchRanking = async () => {
       try {
-        console.log("Tentando buscar os dados...");
-
-        const response = await fetch('http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/1');
+        const response = await fetch(`http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/${userId}`);
         const data = await response.json();
 
-        console.log("Resposta recebida:", data);
-
-        setTopUsuarios(data.topUsuarios);
-        setPosicaoAtual(data.posicaoAtual);
-
+        setTopUsuarios(data.topUsuarios || []);
+        setPosicaoAtual(data.posicaoAtual || null);
       } catch (error) {
         console.error('Erro ao buscar os dados do ranking:', error.message);
       }
     };
 
     fetchRanking();
-  }, []);
+  }, [userId]);
+
+  const getRankingData = () => {
+    if (!posicaoAtual) return topUsuarios.slice(0, 5);
+
+    const filteredTopUsuarios = topUsuarios.filter(user => user && user.idUsuario);
+    const top5 = filteredTopUsuarios.slice(0, 5);
+
+    return [...top5, posicaoAtual];
+  };
 
   return (
     <LinearGradient colors={['#012768', '#006FC2']} style={styles.container}>
@@ -38,20 +42,28 @@ export default function RankingScreen({ navigation }) {
       <Text style={styles.header}>RANKING</Text>
       <Text style={styles.subHeader}>Atualizado quinzenalmente! Quanto melhor colocado, mais penas você ganha!</Text>
       <FlatList
-        data={topUsuarios.length > 0 ? topUsuarios : []}
-        renderItem={({ item }) => (
-          <RankingItem item={{
-            id: item.idUsuario,
-            name: item.nome,
-            score: item.experienciaQuinzenal,
-            rank: item.posicao,
-            avatar: require('../../assets/bitbeak-logo.png')
-          }} />
+        data={getRankingData()}
+        renderItem={({ item, index }) => (
+          <View style={index === 5 ? styles.posicaoAtualContainer : styles.rankingItemContainer}>
+            {index === 5 && (
+              <Text style={styles.posicaoAtualLabel}>SUA POSIÇÃO ATUAL:</Text>
+            )}
+            <RankingItem
+              item={{
+                id: item.idUsuario,
+                name: item.nome,
+                score: item.experienciaQuinzenal,
+                rank: item.posicao,
+                avatar: require('../../assets/bitbeak-logo.png')
+              }}
+            />
+          </View>
         )}
-        keyExtractor={item => item.idUsuario.toString()}
+        keyExtractor={item => `${item.idUsuario}-${item.posicao}`}
         contentContainerStyle={styles.listContainer}
       />
-      <NavBar navigation={navigation} />
+      <NavBar navigation={navigation} currentScreen="RankingScreen" />
+      <View style={styles.spacer} />
     </LinearGradient>
   );
 }
@@ -60,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#002B80',
-    paddingTop: 40,
+    paddingTop: 12,
   },
   listContainer: {
     alignItems: 'center',
@@ -70,19 +82,34 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 10,
   },
   subHeader: {
     color: '#FFF',
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  posicaoAtual: {
-    color: '#FFF',
-    fontSize: 16,
-    textAlign: 'center',
-    marginVertical: 10,
+  rankingItemContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  posicaoAtualContainer: {
+    alignItems: 'center',
+    width: '100%',
+    borderColor: '#FFD700',
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 5,
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  },
+  posicaoAtualLabel: {
+    color: '#FFD700',
+    fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  spacer: {
+    height: 55,
   },
 });

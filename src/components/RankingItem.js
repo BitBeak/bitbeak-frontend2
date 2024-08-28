@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import NavBar from './NavBar';
 
 export default function RankingItem({ item }) {
   return (
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
   rankTail: {
     backgroundColor: '#FFF',
     width: '85%',
-    height: 10,
+    height: 7,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },

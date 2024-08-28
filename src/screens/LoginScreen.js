@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { SafeAreaView, StyleSheet, TextInput, View, Text, TouchableOpacity, Image, TouchableWithoutFeedback } from 'react-native';
+import { SafeAreaView, StyleSheet, TextInput, View, Text, TouchableOpacity, Image, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,6 +12,7 @@ const LoginScreen = ({ navigation }) => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadFonts() {
@@ -30,6 +31,7 @@ const LoginScreen = ({ navigation }) => {
       setEmail('');
       setPassword('');
       setError('');
+      setIsLoading(false);
     }, [])
   );
 
@@ -59,6 +61,8 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const response = await fetch('http://192.168.0.2:5159/api/Login', {
         method: 'POST',
@@ -80,6 +84,7 @@ const LoginScreen = ({ navigation }) => {
         } catch (jsonError) {
           console.error('Failed to parse response as JSON:', jsonError);
           setError('Erro ao processar a resposta do servidor. Tente novamente.');
+          setIsLoading(false);
           return;
         }
       } else {
@@ -91,6 +96,7 @@ const LoginScreen = ({ navigation }) => {
         } else {
           setError('Ocorreu um erro inesperado. Por favor, tente novamente.');
         }
+        setIsLoading(false);
         return;
       }
 
@@ -105,6 +111,8 @@ const LoginScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Network or server error:', error);
       setError('Erro de conexão. Verifique sua internet e tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -154,8 +162,12 @@ const LoginScreen = ({ navigation }) => {
           </TouchableWithoutFeedback>
         </View>
         {error !== '' && <Text style={styles.errorText}>{error}</Text>}
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>INICIAR</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#012768" />
+          ) : (
+            <Text style={styles.buttonText}>INICIAR</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.registerButton} onPress={navigateToSignUpScreen}>
           <Text style={styles.registerButtonText}>Cadastre-se</Text>
