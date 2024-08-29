@@ -8,6 +8,7 @@ import SignUpScreen from './src/screens/SignUpScreen';
 import PasswordResetScreen from './src/screens/PasswordResetScreen'
 import HomeScreen from './src/screens/HomeScreen';
 import MapScreen from './src/screens/MapScreen';
+import MangaScreen from './src/screens/MangaScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -17,7 +18,7 @@ export default function App() {
     <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="InitialScreen"
+          initialRouteName="MangaScreen"
           screenOptions={{
             headerShown: false,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
@@ -43,6 +44,7 @@ export default function App() {
           <Stack.Screen name="PasswordResetScreen" component={PasswordResetScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="MapScreen" component={MapScreen} />
+          <Stack.Screen name="MangaScreen" component={MangaScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
