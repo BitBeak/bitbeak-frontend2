@@ -30,7 +30,7 @@ const MapScreen = ({ route }) => {
   }, []);
 
   const handlePressLevel = (level) => {
-    navigation.navigate('ExplanationScreen', { level, trailNumber });
+    navigation.navigate('MangaScreen');
   };
 
   if (!fontsLoaded) {

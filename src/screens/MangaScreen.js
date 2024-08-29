@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Image, StyleSheet, Animated, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Linking } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, SafeAreaView, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { useNavigation } from '@react-navigation/native';
 
 const MangaScreen = () => {
   const [orientation, setOrientation] = useState(null);
@@ -15,6 +16,7 @@ const MangaScreen = () => {
   const [linksVisible, setLinksVisible] = useState(false);
   const [linksHeight] = useState(new Animated.Value(0));
   const [buttonPosition] = useState(new Animated.Value(1));
+  const navigation = useNavigation();
 
   const images = [
     require('../../assets/mangas/trilha1/nivel1/quadrinho1.jpeg'),
@@ -109,6 +111,9 @@ const MangaScreen = () => {
       const newIndex = currentIndex + 1;
       scrollViewRef.current.scrollTo({ x: newIndex * windowDimensions.width * 0.8, animated: true });
       setCurrentIndex(newIndex);
+    } else {
+      
+      navigation.navigate('ProximaTela');
     }
   };
 
@@ -180,11 +185,9 @@ const MangaScreen = () => {
             </View>
           ))}
         </ScrollView>
-        {currentIndex < images.length - 1 && (
-          <TouchableOpacity style={styles.rightArrow} onPress={handleNext}>
-            <Text style={styles.arrowText}>{">"}</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.rightArrow} onPress={handleNext}>
+          <Text style={styles.arrowText}>{">"}</Text>
+        </TouchableOpacity>
       </Animated.View>
       {renderLinks()}
     </>
@@ -200,6 +203,12 @@ const MangaScreen = () => {
         ]}
         resizeMode="contain"
       />
+      <TouchableOpacity
+        style={styles.rightArrowVertical}
+        onPress={() => navigation.navigate('ProximaTela')}
+      >
+        <Text style={styles.arrowText}>{">"}</Text>
+      </TouchableOpacity>
       {renderLinks()}
     </>
   );
@@ -283,7 +292,6 @@ const styles = StyleSheet.create({
   },
   leftArrow: {
     marginRight: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 15,
     borderRadius: 20,
     zIndex: 1,
@@ -296,11 +304,24 @@ const styles = StyleSheet.create({
   },
   rightArrow: {
     marginLeft: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 15,
     borderRadius: 20,
     zIndex: 1,
     alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  rightArrowVertical: {
+    position: 'absolute',
+    alignSelf: 'flex-end',
+    top: '50%',
+    transform: [{ translateY: -25 }],
+    padding: 15,
+    borderRadius: 20,
+    zIndex: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
@@ -365,5 +386,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 });
+
 
 export default MangaScreen;

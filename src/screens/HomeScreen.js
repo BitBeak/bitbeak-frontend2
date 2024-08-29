@@ -70,7 +70,8 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleEnterTrail = (trail) => {
-    if (trail.unlocked) {
+    console.log('Navigating to MapScreen with trail:', trail);
+    if (trail && trail.unlocked) {
       navigation.navigate('MapScreen', { trailNumber: trail.id });
     } else {
       Alert.alert("Trilha Bloqueada", "Esta trilha está bloqueada. Complete a trilha anterior para desbloquear.");
@@ -78,7 +79,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleStudyGuide = (trail) => {
-    if (trail.unlocked) {
+    if (trail && trail.unlocked) {
       Alert.alert("Guia de Estudo", `Você clicou em 'Guia de Estudo ${trail.title}'!`);
     } else {
       Alert.alert("Trilha Bloqueada", "Esta trilha está bloqueada. Complete a trilha anterior para desbloquear.");
