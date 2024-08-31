@@ -8,30 +8,59 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const QuizzQuestionScreen = ({ route }) => {
   const { question, nextScreenParams, currentQuestionIndex, trailNumber, correctAnswers = 0 } = route.params;
   const navigation = useNavigation();
-  const { addXp, addFeathers } = useContext(AuthContext);
+  const { userId, selectedLevel, addXp, addFeathers } = useContext(AuthContext);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false); 
 
-  const handleOptionPress = (index) => {
+  console.log('Iniciando QuizzQuestionScreen');
+  console.log('Params recebidos:', route.params);
+
+  const handleOptionPress = async (index) => {
+    console.log('Opção selecionada:', index);
     setSelectedOption(index);
     const correct = question.options[index].correct;
     setIsCorrect(correct);
-    if (correct) {
-      addXp(10); 
-      addFeathers(10); 
-      nextScreenParams.correctAnswers = correctAnswers + 1;
-    } else {
-      if (!Array.isArray(nextScreenParams.incorrectQuestions)) {
-        nextScreenParams.incorrectQuestions = [];
+
+    const resposta = {
+      IdTrilha: trailNumber,
+      IdNivelTrilha: selectedLevel,
+      IdUsuario: userId,
+      IdQuestaoAleatoria: question.idQuestao,
+      IdOpcaoEscolhidaUsuario: question.options[index].id,
+      QuestoesRespondidas: [],
+    };
+
+    console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
+
+    try {
+      const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(resposta),
+      });
+
+      console.log(`Status da resposta da API: ${response.status}`);
+
+      if (!response.ok) {
+        console.error(`Erro na resposta da API. Status: ${response.status}`);
+        throw new Error('Erro ao enviar a resposta.');
       }
-      nextScreenParams.incorrectQuestions.push(question);
-      nextScreenParams.correctAnswers = correctAnswers;
+
+      const data = await response.json();
+
+      console.log('Resposta do servidor:', JSON.stringify(data, null, 2));
+
+      setShowFeedback(true); 
+    } catch (error) {
+      console.error('Erro na requisição:', error);
     }
-    setShowFeedback(true); 
   };
 
   const handleNextPress = () => {
+    console.log('Navegando para a próxima questão com params:', JSON.stringify(nextScreenParams, null, 2));
     setShowFeedback(false); 
     navigation.navigate('QuestionScreen', nextScreenParams);
   };

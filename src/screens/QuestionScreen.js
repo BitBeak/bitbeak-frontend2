@@ -71,6 +71,7 @@ const QuestionScreen = ({route}) => {
         <QuizzQuestionScreen
           route={{
             params: {
+              trailNumber: trailNumber,
               question: {
                 ...questionData.questao,
                 question: questionData.questao.enunciado,

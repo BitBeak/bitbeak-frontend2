@@ -89,7 +89,6 @@ const LoginScreen = ({ navigation }) => {
         }
       } else {
         const text = await response.text();
-        console.log('Login API Response:', text);
 
         if (text === 'Usuário não encontrado.' || text === 'Senha incorreta.') {
           setError('E-mail e/ou senha incorreta.');
@@ -101,7 +100,6 @@ const LoginScreen = ({ navigation }) => {
       }
 
       if (response.ok) {
-        console.log('Login successful:', data);
         setUser(data);
         navigation.navigate('HomeScreen');
       } else {

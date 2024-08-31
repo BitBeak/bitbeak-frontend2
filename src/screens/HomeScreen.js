@@ -70,7 +70,6 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleEnterTrail = (trail) => {
-    console.log('Navigating to MapScreen with trail:', trail);
     if (trail && trail.unlocked) {
       navigation.navigate('MapScreen', { trailNumber: trail.id });
     } else {
