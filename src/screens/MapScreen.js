@@ -20,7 +20,7 @@ const loadFonts = () => {
 
 const MapScreen = ({ route }) => {
   const { trailNumber } = route.params;
-  const { trails } = useContext(AuthContext);
+  const { trails, setSelectedLevel } = useContext(AuthContext);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const navigation = useNavigation();
   const scrollViewRef = useRef(null);
@@ -30,7 +30,8 @@ const MapScreen = ({ route }) => {
   }, []);
 
   const handlePressLevel = (level) => {
-    navigation.navigate('MangaScreen');
+    setSelectedLevel(level);
+    navigation.navigate('MangaScreen', { trailNumber: trailNumber });
   };
 
   if (!fontsLoaded) {

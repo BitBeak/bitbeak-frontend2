@@ -9,6 +9,10 @@ import PasswordResetScreen from './src/screens/PasswordResetScreen'
 import HomeScreen from './src/screens/HomeScreen';
 import MapScreen from './src/screens/MapScreen';
 import MangaScreen from './src/screens/MangaScreen';
+import QuestionScreen from './src/screens/QuestionScreen';
+import QuizzQuestionScreen from './src/screens/QuizzQuestionScreen';
+import MatchColumnsScreen from './src/screens/MatchColumnsScreen';
+import CodeQuestionScreen from './src/screens/CodeQuestionScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -45,6 +49,10 @@ export default function App() {
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="MapScreen" component={MapScreen} />
           <Stack.Screen name="MangaScreen" component={MangaScreen} />
+          <Stack.Screen name="QuestionScreen" component={QuestionScreen} />
+          <Stack.Screen name="QuizzQuestionScreen" component={QuizzQuestionScreen} />
+          <Stack.Screen name="MatchColumnsScreen" component={MatchColumnsScreen} />
+          <Stack.Screen name="CodeQuestionScreen" component={CodeQuestionScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>
       </NavigationContainer>

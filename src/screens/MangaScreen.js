@@ -4,7 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useNavigation } from '@react-navigation/native';
 
-const MangaScreen = () => {
+const MangaScreen = ({route}) => {
+  const { trailNumber } = route.params;
   const [orientation, setOrientation] = useState(null);
   const [windowDimensions, setWindowDimensions] = useState(Dimensions.get('window'));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -112,8 +113,7 @@ const MangaScreen = () => {
       scrollViewRef.current.scrollTo({ x: newIndex * windowDimensions.width * 0.8, animated: true });
       setCurrentIndex(newIndex);
     } else {
-      
-      navigation.navigate('ProximaTela');
+      navigation.navigate('QuestionScreen', {trailNumber: trailNumber});
     }
   };
 
@@ -205,7 +205,7 @@ const MangaScreen = () => {
       />
       <TouchableOpacity
         style={styles.rightArrowVertical}
-        onPress={() => navigation.navigate('ProximaTela')}
+        onPress={() => navigation.navigate('QuestionScreen', {trailNumber: trailNumber})}
       >
         <Text style={styles.arrowText}>{">"}</Text>
       </TouchableOpacity>

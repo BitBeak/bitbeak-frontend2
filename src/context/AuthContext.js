@@ -4,10 +4,14 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null); 
   const [xp, setXp] = useState(0);
   const [feathers, setFeathers] = useState(0);
-  const [level, setLevel] = useState(0);
+  const [level, setLevel] = useState(null); 
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(null);
+  const [currentTrailNumber, setCurrentTrailNumber] = useState(null);
+  const [correctAnswers, setCorrectAnswers] = useState(null);
   const [trails, setTrails] = useState([
     { id: 1, title: 'Trilha I: Lógica de Programação', levelsCompleted: 0, totalLevels: 5, unlocked: true },
     { id: 2, title: 'Trilha II: Algoritmos', levelsCompleted: 0, totalLevels: 5, unlocked: false },
@@ -62,8 +66,29 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // Função para incrementar o número da questão
+  const incrementQuestionNumber = () => {
+    setCurrentQuestionNumber((prevNumber) => prevNumber + 1);
+  };
+
+  // Função para resetar o número da questão
+  const resetQuestionNumber = () => {
+    setCurrentQuestionNumber(1);
+  };
+
+  // Função para selecionar a trilha
+  const selectTrail = (trailId) => {
+    setCurrentTrailNumber(trailId);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userId, setUser: setUserFromApi, setUserData, xp, addXp, feathers, addFeathers, level, trails, updateTrailProgress }}>
+    <AuthContext.Provider value={{
+      user, userId, setUser: setUserFromApi, setUserData,
+      xp, addXp, feathers, addFeathers, level,
+      trails, updateTrailProgress, selectedLevel, setSelectedLevel,
+      currentQuestionNumber, incrementQuestionNumber, resetQuestionNumber,
+      currentTrailNumber, selectTrail, correctAnswers, setCorrectAnswers,
+    }}>
       {children}
     </AuthContext.Provider>
   );
