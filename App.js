@@ -13,6 +13,7 @@ import QuestionScreen from './src/screens/QuestionScreen';
 import QuizzQuestionScreen from './src/screens/QuizzQuestionScreen';
 import MatchColumnsScreen from './src/screens/MatchColumnsScreen';
 import CodeQuestionScreen from './src/screens/CodeQuestionScreen';
+import CodeFillScreen from './src/screens/CodeFillScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -53,6 +54,7 @@ export default function App() {
           <Stack.Screen name="QuizzQuestionScreen" component={QuizzQuestionScreen} />
           <Stack.Screen name="MatchColumnsScreen" component={MatchColumnsScreen} />
           <Stack.Screen name="CodeQuestionScreen" component={CodeQuestionScreen} />
+          <Stack.Screen name="CodeFillScreen" component={CodeFillScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>
       </NavigationContainer>

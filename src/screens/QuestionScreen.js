@@ -2,9 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import QuizzQuestionScreen from './QuizzQuestionScreen';
 import MatchColumnsScreen from './MatchColumnsScreen';
+import CodeFillScreen from './CodeFillScreen';
 import { AuthContext } from '../context/AuthContext';
 
-const QuestionScreen = ({route}) => {
+const QuestionScreen = ({ route }) => {
   const { trailNumber } = route.params;
   const { userId, selectedLevel } = useContext(AuthContext);
   const [questionData, setQuestionData] = useState(null);
@@ -22,7 +23,7 @@ const QuestionScreen = ({route}) => {
         idNivelTrilha: selectedLevel,
         idUsuario: userId,
       };
-  
+
       console.log('Request Body:', requestBody);
 
       try {
@@ -75,41 +76,55 @@ const QuestionScreen = ({route}) => {
               question: {
                 ...questionData.questao,
                 question: questionData.questao.enunciado,
-                options: questionData.questao.opcoes.map(opcao => ({
+                options: questionData.questao.opcoes.map((opcao) => ({
                   text: opcao.texto,
                   correct: opcao.correta,
                 })),
               },
-            },
-          }}
+            }
+          }
+        }
         />
       );
-      case 1:
-        return (
-            <MatchColumnsScreen
-  route={{
-    params: {
-      trailNumber: trailNumber,
-      question: {
-        ...questionData.questao,
-        idQuestao: questionData.questao.idQuestao,
-        options: questionData.questao.lacunas.map(lacuna => ({
-          idLacuna: lacuna.idLacuna,
-          left: lacuna.colunaA,
-          right: lacuna.colunaB,
-        })),
-      },
-    }}}
-  />
-        );
-      
+    case 1:
+      return (
+        <MatchColumnsScreen
+          route={{
+            params: {
+              trailNumber: trailNumber,
+              question: {
+                ...questionData.questao,
+                idQuestao: questionData.questao.idQuestao,
+                options: questionData.questao.lacunas.map((lacuna) => ({
+                  idLacuna: lacuna.idLacuna,
+                  left: lacuna.colunaA,
+                  right: lacuna.colunaB,
+                })),
+              },
+            }
+          }
+        }
+        />
+      );
     case 3:
       return (
-        <View style={styles.codeFillContainer}>
-          <Text style={styles.questionText}>{questionData.questao.enunciado}</Text>
-          <Text style={styles.codeText}>{questionData.questao.codigo}</Text>
-          <Text style={styles.warningText}>Aviso: Tipo CodeFill ainda não implementado.</Text>
-        </View>
+        <CodeFillScreen
+          route={{
+            params: {
+              trailNumber: trailNumber,
+              question: {
+                ...questionData.questao,
+                enunciado: questionData.questao.enunciado,
+                codigo: questionData.questao.codigo,
+                solucaoEsperada: questionData.questao.solucaoEsperada,
+              },
+              currentQuestionIndex: 0,
+              correctAnswers: 0,
+              incorrectQuestions: [],
+            }
+          }
+        }
+        />
       );
     default:
       return (
