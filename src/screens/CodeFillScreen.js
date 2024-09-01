@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AuthContext } from '../context/AuthContext';
+import CustomAlert from '../components/CustomAlert';
 
 const CodeFillScreen = ({ route }) => {
   const {
@@ -35,6 +36,9 @@ const CodeFillScreen = ({ route }) => {
   const [isSending, setIsSending] = useState(false);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [nextScreenParams, setNextScreenParams] = useState(null);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     setCodeInput('');
@@ -72,17 +76,23 @@ const CodeFillScreen = ({ route }) => {
   
       if (response.status === 400) {
         if (responseData.includes('O usuário já concluiu este nível.')) {
-          setAlertTitle('Nível já concluído!');
-          setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
-          setAlertVisible(true);
-        } else {
-          throw new Error('Erro desconhecido');
+            // Caso o nível já tenha sido concluído anteriormente
+            setAlertTitle('Nível já concluído!');
+            setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
+            setAlertVisible(true);
+        }  else {
+            throw new Error('Erro desconhecido');
         }
-      } else if (response.status === 200) {
+    } else if (response.status === 200) {
         if (responseData.includes('Parabéns')) {
-          setAlertTitle('Parabéns, nível concluído!');
-          setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
-          setAlertVisible(true);
+            // Caso o usuário tenha concluído o nível com sucesso
+            setAlertTitle('Parabéns!');
+            setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
+            setAlertVisible(true);
+        } else if (responseData.includes('Jogo finalizado. Tente novamente!')) {
+            setAlertTitle('Jogo finalizado!');
+            setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
+            setAlertVisible(true);
         } else {
           // Continue o processamento normal se não houver mensagem específica
           const data = JSON.parse(responseData);
@@ -127,11 +137,6 @@ const CodeFillScreen = ({ route }) => {
   };
 
   const handleNextPress = () => {
-    if (!nextScreenParams || !nextScreenParams.question) {
-      console.error('nextScreenParams ou nextScreenParams.question não está definido');
-      return;
-    }
-
     setShowFeedback(false);
 
     const { tipo } = nextScreenParams.question;
@@ -219,6 +224,15 @@ const CodeFillScreen = ({ route }) => {
             </View>
           </LinearGradient>
         </KeyboardAvoidingView>
+        <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false); // Feche o modal
+          navigation.navigate('HomeScreen'); // Navegue para HomeScreen após o fechamento do modal
+        }}
+      />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

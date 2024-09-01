@@ -59,7 +59,7 @@ const QuizzQuestionScreen = ({ route }) => {
                 setAlertTitle('Nível já concluído!');
                 setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
                 setAlertVisible(true);
-            } else {
+            }  else {
                 throw new Error('Erro desconhecido');
             }
         } else if (response.status === 200) {
@@ -67,6 +67,10 @@ const QuizzQuestionScreen = ({ route }) => {
                 // Caso o usuário tenha concluído o nível com sucesso
                 setAlertTitle('Parabéns!');
                 setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
+                setAlertVisible(true);
+            } else if (responseData.includes('Jogo finalizado. Tente novamente!')) {
+                setAlertTitle('Jogo finalizado!');
+                setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
                 setAlertVisible(true);
             } else {
                 // Continue o processamento normal se não houver mensagem específica
@@ -79,7 +83,7 @@ const QuizzQuestionScreen = ({ route }) => {
                 setIsCorrect(acertou);
 
                 const updatedHistory = data.questoesRespondidas;
-
+                
                 setNextScreenParams({
                     question: {
                         idQuestao: data.questao.idQuestao,
@@ -96,7 +100,7 @@ const QuizzQuestionScreen = ({ route }) => {
                     incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
                     questionsHistory: updatedHistory,
                 });
-
+                console.log('Atualizou essa porra');
                 setShowFeedback(true);
             }
         } else {
