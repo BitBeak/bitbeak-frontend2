@@ -1,18 +1,22 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext'; 
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomAlert from '../components/CustomAlert';
 
 const QuizzQuestionScreen = ({ route }) => {
-  const { question, currentQuestionIndex, trailNumber, correctAnswers = 0, questionsHistory = [] } = route.params;
+  const { question, currentQuestionIndex, trailNumber, correctAnswers = 0, incorrectQuestions = [], questionsHistory = [] } = route.params;
   const navigation = useNavigation();
   const { userId, selectedLevel } = useContext(AuthContext);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [nextScreenParams, setNextScreenParams] = useState(null);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     setSelectedOption(null);  // Reseta a seleção quando a tela é montada
@@ -22,70 +26,86 @@ const QuizzQuestionScreen = ({ route }) => {
 
   const handleOptionPress = async (index) => {
     setSelectedOption(index);
-    const correct = question.opcoes[index].correct;
+    const correct = question.opcoes[index].correta;
     setIsCorrect(correct);
 
-    // Atualiza o histórico de questões respondidas
     const resposta = {
-      IdTrilha: trailNumber,
-      IdNivelTrilha: selectedLevel,
-      IdUsuario: userId,
-      IdQuestaoAleatoria: question.idQuestao,
-      IdOpcaoEscolhidaUsuario: question.opcoes[index].idOpcao,
-      QuestoesRespondidas: questionsHistory,  // Envia o histórico de questões respondidas
+        IdTrilha: trailNumber,
+        IdNivelTrilha: selectedLevel,
+        IdUsuario: userId,
+        IdQuestaoAleatoria: question.idQuestao,
+        IdOpcaoEscolhidaUsuario: question.opcoes[index].idOpcao,
+        QuestoesRespondidas: questionsHistory,
+        ContadorAcertos: correctAnswers,
+        ContadorErros: incorrectQuestions.length,
     };
 
     console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
 
     try {
-      const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(resposta),
-      });
+        const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(resposta),
+        });
 
-      if (!response.ok) {
-        throw new Error('Erro ao enviar a resposta.');
-      }
+        const responseData = await response.text();
 
-      const data = await response.json();
-      console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
+        if (response.status === 400) {
+            if (responseData.includes('O usuário já concluiu este nível.')) {
+                // Caso o nível já tenha sido concluído anteriormente
+                setAlertTitle('Nível já concluído!');
+                setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
+                setAlertVisible(true);
+            } else {
+                throw new Error('Erro desconhecido');
+            }
+        } else if (response.status === 200) {
+            if (responseData.includes('Parabéns')) {
+                // Caso o usuário tenha concluído o nível com sucesso
+                setAlertTitle('Parabéns!');
+                setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
+                setAlertVisible(true);
+            } else {
+                // Continue o processamento normal se não houver mensagem específica
+                const data = JSON.parse(responseData);
+                console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
 
-      const acertosAntes = correctAnswers;
-      const acertosDepois = data.contadorAcertos;
+                const acertosAntes = correctAnswers;
+                const acertosDepois = data.contadorAcertos;
+                const acertou = acertosDepois > acertosAntes;
+                setIsCorrect(acertou);
 
-      if (acertosDepois > acertosAntes) {
-        setIsCorrect(true);
-      } else {
-        setIsCorrect(false);
-      }
+                const updatedHistory = data.questoesRespondidas;
 
-      // Atualiza o histórico de questões respondidas com o novo dado do servidor
-      const updatedHistory = data.questoesRespondidas;
+                setNextScreenParams({
+                    question: {
+                        idQuestao: data.questao.idQuestao,
+                        enunciado: data.questao.enunciado,
+                        tipo: data.questao.tipo,
+                        opcoes: data.questao.opcoes,
+                        lacunas: data.questao.lacunas,
+                        codeFill: data.questao.codeFill,
+                        codigo: data.questao.codigo,
+                    },
+                    currentQuestionIndex: currentQuestionIndex + 1,
+                    trailNumber,
+                    correctAnswers: acertosDepois,
+                    incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+                    questionsHistory: updatedHistory,
+                });
 
-      setNextScreenParams({
-        question: {
-          idQuestao: data.questao.idQuestao,
-          enunciado: data.questao.enunciado,
-          tipo: data.questao.tipo,
-          opcoes: data.questao.opcoes, // Verificação de segurança para garantir que options não seja undefined
-          lacunas: data.questao.lacunas,
-          codeFill: data.questao.codeFill,
-          codigo: data.questao.codigo,
-        },
-        currentQuestionIndex: currentQuestionIndex + 1,
-        trailNumber,
-        correctAnswers: data.contadorAcertos,
-        questionsHistory: updatedHistory,  // Passa o histórico atualizado para a próxima tela
-      });
-
-      setShowFeedback(true); 
+                setShowFeedback(true);
+            }
+        } else {
+            throw new Error(`Erro ao enviar a resposta: ${response.status}`);
+        }
     } catch (error) {
-      console.error('Erro na requisição:', error);
+        console.error('Erro na requisição:', error);
     }
-  };
+};
 
   const handleNextPress = () => {
     if (!nextScreenParams || !nextScreenParams.question) {
@@ -98,21 +118,21 @@ const QuizzQuestionScreen = ({ route }) => {
     const { tipo } = nextScreenParams.question;
 
     switch(tipo) {
-        case 0:
-            navigation.navigate('QuizzQuestionScreen', {
-              ...nextScreenParams,
-              key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
-            });
-            break;
-        case 1:
-            navigation.navigate('MatchColumnsScreen', nextScreenParams);
-            break;
-        case 3:
-            navigation.navigate('CodeFillScreen', nextScreenParams);
-            break;
-        default:
-            console.error('Tipo de questão desconhecido:', tipo);
-            break;
+      case 0:
+        navigation.navigate('QuizzQuestionScreen', {
+          ...nextScreenParams,
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
+        });
+        break;
+      case 1:
+        navigation.navigate('MatchColumnsScreen', nextScreenParams);
+        break;
+      case 3:
+        navigation.navigate('CodeFillScreen', nextScreenParams);
+        break;
+      default:
+        console.error('Tipo de questão desconhecido:', tipo);
+        break;
     }
   };
 
@@ -139,7 +159,7 @@ const QuizzQuestionScreen = ({ route }) => {
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>{question.enunciado}</Text>
           </View>
-          {question.opcoes && question.opcoes.length > 0 ? ( // Verificação para evitar erro se options for undefined ou vazio
+          {question.opcoes && question.opcoes.length > 0 ? (
             question.opcoes.map((option, index) => (
               <TouchableOpacity
                 key={index}
@@ -172,6 +192,15 @@ const QuizzQuestionScreen = ({ route }) => {
           )}
         </View>
       </LinearGradient>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false); // Feche o modal
+          navigation.navigate('HomeScreen'); // Navegue para HomeScreen após o fechamento do modal
+        }}
+      />
     </SafeAreaView>
   );
 };

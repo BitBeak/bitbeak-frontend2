@@ -66,25 +66,32 @@ const QuestionScreen = ({ route }) => {
     );
   }
 
+  const initialParams = {
+    trailNumber,
+    currentQuestionIndex: 0,
+    correctAnswers: 0,
+    incorrectQuestions: [],
+    questionsHistory: [],
+  };
+
   switch (questionData.questao.tipo) {
     case 0:
       return (
         <QuizzQuestionScreen
           route={{
             params: {
-              trailNumber: trailNumber,
+              ...initialParams,
               question: {
                 ...questionData.questao,
                 question: questionData.questao.enunciado,
                 opcoes: questionData.questao.opcoes.map((opcao) => ({
                   texto: opcao.texto,
-                  correct: opcao.correta,
-                  idOpcao: opcao.idOpcao
+                  correta: opcao.correta,
+                  idOpcao: opcao.idOpcao,
                 })),
               },
-            }
-          }
-        }
+            },
+          }}
         />
       );
     case 1:
@@ -92,19 +99,18 @@ const QuestionScreen = ({ route }) => {
         <MatchColumnsScreen
           route={{
             params: {
-              trailNumber: trailNumber,
+              ...initialParams,
               question: {
                 ...questionData.questao,
                 idQuestao: questionData.questao.idQuestao,
-                options: questionData.questao.lacunas.map((lacuna) => ({
+                lacunas: questionData.questao.lacunas.map((lacuna) => ({
                   idLacuna: lacuna.idLacuna,
-                  left: lacuna.colunaA,
-                  right: lacuna.colunaB,
+                  colunaA: lacuna.colunaA,
+                  colunaB: lacuna.colunaB,
                 })),
               },
-            }
-          }
-        }
+            },
+          }}
         />
       );
     case 3:
@@ -112,19 +118,15 @@ const QuestionScreen = ({ route }) => {
         <CodeFillScreen
           route={{
             params: {
-              trailNumber: trailNumber,
+              ...initialParams,
               question: {
                 ...questionData.questao,
                 enunciado: questionData.questao.enunciado,
                 codigo: questionData.questao.codigo,
                 solucaoEsperada: questionData.questao.solucaoEsperada,
               },
-              currentQuestionIndex: 0,
-              correctAnswers: 0,
-              incorrectQuestions: [],
-            }
-          }
-        }
+            },
+          }}
         />
       );
     default:
@@ -154,22 +156,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     color: 'red',
-  },
-  codeFillContainer: {
-    padding: 20,
-  },
-  questionText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  codeText: {
-    fontSize: 16,
-    fontFamily: 'monospace',
-    marginVertical: 10,
-  },
-  warningText: {
-    fontSize: 14,
-    color: 'orange',
   },
 });
 

@@ -1,22 +1,26 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomAlert from '../components/CustomAlert';
 
 const COLORS = ['#FF7043', '#66BB6A', '#42A5F5', '#AB47BC'];
 
 const MatchColumnsScreen = ({ route }) => {
-  const { question, currentQuestionIndex, trailNumber, questionsHistory = [] } = route.params;
+  const { question, currentQuestionIndex, trailNumber, questionsHistory = [], correctAnswers = 0, incorrectQuestions = [] } = route.params;
   const navigation = useNavigation();
-  const { userId, selectedLevel, correctAnswers } = useContext(AuthContext);
+  const { userId, selectedLevel } = useContext(AuthContext);
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [selectedRight, setSelectedRight] = useState(null);
   const [pairs, setPairs] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [nextScreenParams, setNextScreenParams] = useState(null); // Estado para armazenar os parâmetros da próxima tela
+  const [nextScreenParams, setNextScreenParams] = useState(null);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
   const idQuestao = question.idQuestao;
 
   useEffect(() => {
@@ -30,40 +34,40 @@ const MatchColumnsScreen = ({ route }) => {
   const handleLeftSelect = (item) => {
     setSelectedLeft(item);
     if (selectedRight) {
-        const newPairs = [...pairs, {
-            left: item,
-            right: selectedRight,
-            color: COLORS[pairs.length % COLORS.length],
-            idLacuna: item.idLacuna
-        }];
-        setPairs(newPairs);
-        setSelectedLeft(null);
-        setSelectedRight(null);
+      const newPairs = [...pairs, {
+        left: item,
+        right: selectedRight,
+        color: COLORS[pairs.length % COLORS.length],
+        idLacuna: item.idLacuna
+      }];
+      setPairs(newPairs);
+      setSelectedLeft(null);
+      setSelectedRight(null);
 
-        if (newPairs.length === question.lacunas.length) {
-            checkAnswers(newPairs);
-        }
+      if (newPairs.length === question.lacunas.length) {
+        checkAnswers(newPairs);
+      }
     }
-};
+  };
 
-const handleRightSelect = (item) => {
+  const handleRightSelect = (item) => {
     setSelectedRight(item);
     if (selectedLeft) {
-        const newPairs = [...pairs, {
-            left: selectedLeft,
-            right: item,
-            color: COLORS[pairs.length % COLORS.length],
-            idLacuna: selectedLeft.idLacuna
-        }];
-        setPairs(newPairs);
-        setSelectedLeft(null);
-        setSelectedRight(null);
+      const newPairs = [...pairs, {
+        left: selectedLeft,
+        right: item,
+        color: COLORS[pairs.length % COLORS.length],
+        idLacuna: selectedLeft.idLacuna
+      }];
+      setPairs(newPairs);
+      setSelectedLeft(null);
+      setSelectedRight(null);
 
-        if (newPairs.length === question.lacunas.length) {
-            checkAnswers(newPairs);
-        }
+      if (newPairs.length === question.lacunas.length) {
+        checkAnswers(newPairs);
+      }
     }
-};
+  };
 
   const checkAnswers = (finalPairs) => {
     responderQuestao(finalPairs);
@@ -76,15 +80,17 @@ const handleRightSelect = (item) => {
       idUsuario: userId,
       idQuestaoAleatoria: idQuestao,
       QuestoesRespondidas: questionsHistory,
+      ContadorAcertos: correctAnswers,
+      ContadorErros: incorrectQuestions.length,
       respostasLacunas: finalPairs.map(pair => ({
         idLacuna: pair.idLacuna,
         respostaColunaA: pair.left.colunaA,
         respostaColunaB: pair.right.colunaB,
       })),
     };
-
+  
     console.log('Enviando para a API:', JSON.stringify(requestBody, null, 2));
-
+  
     try {
       const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
         method: 'POST',
@@ -93,52 +99,67 @@ const handleRightSelect = (item) => {
         },
         body: JSON.stringify(requestBody),
       });
-
-      if (!response.ok) {
-        console.error(`Erro na resposta da API. Status: ${response.status}`);
-        throw new Error('Erro ao responder a questão.');
+  
+      const responseData = await response.text();
+  
+      if (response.status === 400) {
+        if (responseData.includes('O usuário já concluiu este nível.')) {
+          // Caso o nível já tenha sido concluído anteriormente
+          setAlertTitle('Nível já concluído!');
+          setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
+          setAlertVisible(true);
+        } else {
+          throw new Error('Erro desconhecido');
+        }
+      } else if (response.status === 200) {
+        if (responseData.includes('Parabéns')) {
+          // Caso o usuário tenha concluído o nível com sucesso
+          setAlertTitle('Parabéns, nível concluído!');
+          setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
+          setAlertVisible(true);
+        } else {
+          // Continue o processamento normal se não houver mensagem específica
+          const data = JSON.parse(responseData);
+          console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
+  
+          const acertosAntes = correctAnswers;
+          const acertosDepois = data.contadorAcertos;
+          const acertou = acertosDepois > acertosAntes;
+          setIsCorrect(acertou);
+  
+          const updatedHistory = data.questoesRespondidas;
+  
+          setNextScreenParams({
+            question: {
+              idQuestao: data.questao.idQuestao,
+              enunciado: data.questao.enunciado,
+              tipo: data.questao.tipo,
+              opcoes: data.questao.opcoes,
+              lacunas: data.questao.lacunas,
+              codeFill: data.questao.codeFill,
+              codigo: data.questao.codigo,
+            },
+            currentQuestionIndex: currentQuestionIndex + 1,
+            trailNumber,
+            correctAnswers: acertosDepois,
+            incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+            questionsHistory: updatedHistory,
+          });
+  
+          setShowFeedback(true);
+        }
+      } else {
+        throw new Error(`Erro ao enviar a resposta: ${response.status}`);
       }
-
-      const data = await response.json();
-
-      console.log('Dados recebidos da API:', data);
-      // Verifique se há erros na lógica abaixo
-      const acertosAntes = correctAnswers;
-      const acertosDepois = data.contadorAcertos;
-
-      setIsCorrect(acertosDepois > acertosAntes);
-
-      // Atualiza o histórico de questões respondidas
-      const updatedHistory = data.questoesRespondidas;
-
-      setNextScreenParams({
-        question: {
-          idQuestao: data.questao.idQuestao,
-          enunciado: data.questao.enunciado,
-          tipo: data.questao.tipo,
-          lacunas: data.questao.lacunas,
-          codeFill: data.questao.codeFill,
-          codigo: data.questao.codigo,
-          opcoes: data.questao.opcoes,
-        },
-        currentQuestionIndex: currentQuestionIndex + 1,
-        trailNumber,
-        correctAnswers: data.contadorAcertos,
-        questionsHistory: updatedHistory,
-      });
-
-      setShowFeedback(true);
     } catch (error) {
       console.error('Erro na requisição:', error);
-      setIsCorrect(false);
-      setShowFeedback(true);
     }
-};
+  };
 
   const handleNextPress = () => {
     if (!nextScreenParams || !nextScreenParams.question) {
-        console.error('nextScreenParams ou nextScreenParams.question não está definido');
-        return;
+      console.error('nextScreenParams ou nextScreenParams.question não está definido');
+      return;
     }
 
     setShowFeedback(false);
@@ -162,7 +183,7 @@ const handleRightSelect = (item) => {
         console.error('Tipo de questão desconhecido:', tipo);
         break;
     }
-};
+  };
 
   const isPaired = (item, side) => {
     return pairs.some(pair => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
@@ -200,7 +221,7 @@ const handleRightSelect = (item) => {
           <View style={styles.leftColumn}>
             {question.lacunas.map((item) => (
               <TouchableOpacity
-                key={`${item.idLacuna}-left`} // Adicionei uma chave única para garantir a renderização correta
+                key={`${item.idLacuna}-left`}
                 style={[
                   styles.leftOption,
                   selectedLeft && selectedLeft.colunaA === item.colunaA && styles.selectedOption,
@@ -217,7 +238,7 @@ const handleRightSelect = (item) => {
             <View style={styles.rightColumn}>
               {question.lacunas.slice(0, Math.ceil(question.lacunas.length / 2)).map((item) => (
                 <TouchableOpacity
-                  key={`${item.idLacuna}-right`} // Adicionei uma chave única para garantir a renderização correta
+                  key={`${item.idLacuna}-right`}
                   style={[
                     styles.rightOption,
                     selectedRight && selectedRight.colunaB === item.colunaB && styles.selectedOption,
@@ -233,7 +254,7 @@ const handleRightSelect = (item) => {
             <View style={styles.rightColumn}>
               {question.lacunas.slice(Math.ceil(question.lacunas.length / 2)).map((item) => (
                 <TouchableOpacity
-                  key={`${item.idLacuna}-right`} // Adicionei uma chave única para garantir a renderização correta
+                  key={`${item.idLacuna}-right`}
                   style={[
                     styles.rightOption,
                     selectedRight && selectedRight.colunaB === item.colunaB && styles.selectedOption,
@@ -257,6 +278,15 @@ const handleRightSelect = (item) => {
           )}
         </View>
       </LinearGradient>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false); // Feche o modal
+          navigation.navigate('HomeScreen'); // Navegue para HomeScreen após o fechamento do modal
+        }}
+      />
     </SafeAreaView>
   );
 };

@@ -23,9 +23,10 @@ const CodeFillScreen = ({ route }) => {
     currentQuestionIndex,
     trailNumber,
     correctAnswers = 0,
+    incorrectQuestions = [],
     questionsHistory = [],
   } = route.params;
-  
+
   const navigation = useNavigation();
   const { userId, selectedLevel } = useContext(AuthContext);
   const [codeInput, setCodeInput] = useState('');
@@ -33,9 +34,8 @@ const CodeFillScreen = ({ route }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
-  const [nextScreenParams, setNextScreenParams] = useState(null); // Estado para armazenar os parâmetros da próxima tela
+  const [nextScreenParams, setNextScreenParams] = useState(null);
 
-  // Resetar o input toda vez que a tela é montada
   useEffect(() => {
     setCodeInput('');
   }, [question]);
@@ -43,7 +43,7 @@ const CodeFillScreen = ({ route }) => {
   const handleSendPress = async () => {
     setIsSending(true);
     setIsInputDisabled(true);
-
+  
     const resposta = {
       IdTrilha: trailNumber,
       IdNivelTrilha: selectedLevel,
@@ -51,10 +51,12 @@ const CodeFillScreen = ({ route }) => {
       IdQuestaoAleatoria: question.idQuestao,
       RespostaUsuario: codeInput,
       QuestoesRespondidas: questionsHistory,
+      ContadorAcertos: correctAnswers,
+      ContadorErros: incorrectQuestions.length,
     };
-
+  
     console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
-
+  
     try {
       const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
         method: 'POST',
@@ -63,46 +65,58 @@ const CodeFillScreen = ({ route }) => {
         },
         body: JSON.stringify(resposta),
       });
-
+  
       console.log(`Status da resposta da API: ${response.status}`);
-
-      if (!response.ok) {
-        console.error(`Erro na resposta da API. Status: ${response.status}`);
-        throw new Error('Erro ao enviar a resposta.');
-      }
-
-      const data = await response.json();
-      const acertosAntes = correctAnswers;
-      const acertosDepois = data.contadorAcertos;
-
-      if (acertosDepois > acertosAntes) {
-        setIsCorrect(true);
+  
+      const responseData = await response.text();
+  
+      if (response.status === 400) {
+        if (responseData.includes('O usuário já concluiu este nível.')) {
+          setAlertTitle('Nível já concluído!');
+          setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
+          setAlertVisible(true);
+        } else {
+          throw new Error('Erro desconhecido');
+        }
+      } else if (response.status === 200) {
+        if (responseData.includes('Parabéns')) {
+          setAlertTitle('Parabéns, nível concluído!');
+          setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
+          setAlertVisible(true);
+        } else {
+          // Continue o processamento normal se não houver mensagem específica
+          const data = JSON.parse(responseData);
+          console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
+  
+          const acertosAntes = correctAnswers;
+          const acertosDepois = data.contadorAcertos;
+          const acertou = acertosDepois > acertosAntes;
+          setIsCorrect(acertou);
+  
+          const updatedHistory = data.questoesRespondidas;
+  
+          setNextScreenParams({
+            question: {
+              idQuestao: data.questao.idQuestao,
+              enunciado: data.questao.enunciado,
+              tipo: data.questao.tipo,
+              lacunas: data.questao.lacunas,
+              codeFill: data.questao.codeFill,
+              codigo: data.questao.codigo,
+              opcoes: data.questao.opcoes,
+            },
+            currentQuestionIndex: currentQuestionIndex + 1,
+            trailNumber,
+            correctAnswers: acertosDepois,
+            incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+            questionsHistory: updatedHistory,
+          });
+  
+          setShowFeedback(true);
+        }
       } else {
-        setIsCorrect(false);
+        throw new Error(`Erro ao enviar a resposta: ${response.status}`);
       }
-
-      const updatedHistory = data.questoesRespondidas;
-
-      // Atualiza o estado com os parâmetros da próxima tela
-      setNextScreenParams({
-        question: {
-          idQuestao: data.questao.idQuestao,
-          enunciado: data.questao.enunciado,
-          tipo: data.questao.tipo,
-          lacunas: data.questao.lacunas,
-          codeFill: data.questao.codeFill,
-          codigo: data.questao.codigo,
-          opcoes: data.questao.opcoes,
-        },
-        currentQuestionIndex: currentQuestionIndex + 1,
-        trailNumber,
-        correctAnswers: data.contadorAcertos,
-        questionsHistory: updatedHistory,
-      });
-
-      setShowFeedback(true);
-
-      console.log('Resposta do servidor:', JSON.stringify(data, null, 2));
     } catch (error) {
       console.error('Erro na requisição:', error);
       setIsCorrect(false);
@@ -132,7 +146,7 @@ const CodeFillScreen = ({ route }) => {
       case 3:
         navigation.navigate('CodeFillScreen', {
           ...nextScreenParams,
-          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
         });
         break;
       default:

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, View, Text, TouchableOpacity, ScrollView, Dimensions, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font';
@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import Header from '../components/Header';
 import Navbar from '../components/NavBar.js';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -17,11 +18,19 @@ const HomeScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      fetchUserData();
-    }
-  }, [fontsLoaded]);
+  useFocusEffect(
+    useCallback(() => {
+      // Essa função será chamada sempre que a tela ganhar o foco
+      if (fontsLoaded) {
+        fetchUserData();
+      }
+
+      // Retorno opcional para limpar ou cancelar efeitos quando a tela perder o foco
+      return () => {
+        setLoading(true); // Recoloca o estado de loading, se necessário
+      };
+    }, [fontsLoaded])
+  );
 
   const fetchUserData = async () => {
     try {
