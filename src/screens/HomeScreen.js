@@ -20,14 +20,11 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      // Essa função será chamada sempre que a tela ganhar o foco
       if (fontsLoaded) {
         fetchUserData();
       }
-
-      // Retorno opcional para limpar ou cancelar efeitos quando a tela perder o foco
       return () => {
-        setLoading(true); // Recoloca o estado de loading, se necessário
+        setLoading(true);
       };
     }, [fontsLoaded])
   );
@@ -102,7 +99,12 @@ const HomeScreen = ({ navigation }) => {
   };
 
   if (loading || !fontsLoaded) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#006FC2" />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
   }
 
   return (
@@ -154,6 +156,16 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#006FC2',
+  },
   container: {
     flex: 1,
     padding: 10,
