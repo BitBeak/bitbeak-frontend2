@@ -31,7 +31,7 @@ const MapScreen = ({ route }) => {
 
   const handlePressLevel = (level) => {
     setSelectedLevel(level);
-    navigation.navigate('MangaScreen', { trailNumber: trailNumber });
+    navigation.navigate('MangaScreen', { trailNumber: trailNumber, levelNumber: level });
   };
 
   if (!fontsLoaded) {

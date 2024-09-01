@@ -1,11 +1,165 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Image, StyleSheet, Animated, SafeAreaView, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useNavigation } from '@react-navigation/native';
 
-const MangaScreen = ({route}) => {
-  const { trailNumber } = route.params;
+// Mapeamento de imagens por trilha e nível
+const mangaData = {
+  '1-1': {
+    horizontal: [
+      require('../../assets/mangas/Trilha I/N1/Cena1_N1T1.jpg'),
+      require('../../assets/mangas/Trilha I/N1/Cena2_N1T1.jpg'),
+      require('../../assets/mangas/Trilha I/N1/Cena3_N1T1.jpg'),
+      require('../../assets/mangas/Trilha I/N1/Cena4_N1T1.jpg'),
+      require('../../assets/mangas/Trilha I/N1/Cena5_N1T1.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha I/N1/N1T1.jpg'),
+  },
+  '1-2': {
+    horizontal: [
+      require('../../assets/mangas/Trilha I/N2/Cena1_N2T1.jpg'),
+      require('../../assets/mangas/Trilha I/N2/Cena2_N2T1.jpg'),
+      require('../../assets/mangas/Trilha I/N2/Cena3_N2T1.jpg'),
+      require('../../assets/mangas/Trilha I/N2/Cena4_N2T1.jpg'),
+      require('../../assets/mangas/Trilha I/N2/Cena5_N2T1.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha I/N2/N2T1.jpg'),
+  },
+  '1-3': {
+    horizontal: [
+      require('../../assets/mangas/Trilha I/N3/Cena1_N3T1.jpg'),
+      require('../../assets/mangas/Trilha I/N3/Cena2_N3T1.jpg'),
+      require('../../assets/mangas/Trilha I/N3/Cena3_N3T1.jpg'),
+      require('../../assets/mangas/Trilha I/N3/Cena4_N3T1.jpg'),
+      require('../../assets/mangas/Trilha I/N3/Cena5_N3T1.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha I/N3/N3T1.jpg'),
+  },
+  '1-4': {
+    horizontal: [
+      require('../../assets/mangas/Trilha I/N4/Cena1_N4T1.jpg'),
+      require('../../assets/mangas/Trilha I/N4/Cena2_N4T1.jpg'),
+      require('../../assets/mangas/Trilha I/N4/Cena3_N4T1.jpg'),
+      require('../../assets/mangas/Trilha I/N4/Cena4_N4T1.jpg'),
+      require('../../assets/mangas/Trilha I/N4/Cena5_N4T1.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha I/N4/N4T1.jpg'),
+  },
+  '1-5': {
+    horizontal: [
+      require('../../assets/mangas/Trilha I/N5/Cena1_N5T1.jpg'),
+      require('../../assets/mangas/Trilha I/N5/Cena2_N5T1.jpg'),
+      require('../../assets/mangas/Trilha I/N5/Cena3_N5T1.jpg'),
+      require('../../assets/mangas/Trilha I/N5/Cena4_N5T1.jpg'),
+      require('../../assets/mangas/Trilha I/N5/Cena5_N5T1.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha I/N5/N5T1.jpg'),
+  },
+  '2-1': {
+    horizontal: [
+      require('../../assets/mangas/Trilha II/N1/Cena1_N1T2.jpg'),
+      require('../../assets/mangas/Trilha II/N1/Cena2_N1T2.jpg'),
+      require('../../assets/mangas/Trilha II/N1/Cena3_N1T2.jpg'),
+      require('../../assets/mangas/Trilha II/N1/Cena4_N1T2.jpg'),
+      require('../../assets/mangas/Trilha II/N1/Cena5_N1T2.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha II/N1/N1T2.jpg'),
+  },
+  '2-2': {
+    horizontal: [
+      require('../../assets/mangas/Trilha II/N2/Cena1_N2T2.jpg'),
+      require('../../assets/mangas/Trilha II/N2/Cena2_N2T2.jpg'),
+      require('../../assets/mangas/Trilha II/N2/Cena3_N2T2.jpg'),
+      require('../../assets/mangas/Trilha II/N2/Cena4_N2T2.jpg'),
+      require('../../assets/mangas/Trilha II/N2/Cena5_N2T2.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha II/N2/N2T2.jpg'),
+  },
+  '2-3': {
+    horizontal: [
+      require('../../assets/mangas/Trilha II/N3/Cena1_N3T2.jpg'),
+      require('../../assets/mangas/Trilha II/N3/Cena2_N3T2.jpg'),
+      require('../../assets/mangas/Trilha II/N3/Cena3_N3T2.jpg'),
+      require('../../assets/mangas/Trilha II/N3/Cena4_N3T2.jpg'),
+      require('../../assets/mangas/Trilha II/N3/Cena5_N3T2.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha II/N3/N3T2.jpg'),
+  },
+  '2-4': {
+    horizontal: [
+      require('../../assets/mangas/Trilha II/N4/Cena1_N4T2.jpg'),
+      require('../../assets/mangas/Trilha II/N4/Cena2_N4T2.jpg'),
+      require('../../assets/mangas/Trilha II/N4/Cena3_N4T2.jpg'),
+      require('../../assets/mangas/Trilha II/N4/Cena4_N4T2.jpg'),
+      require('../../assets/mangas/Trilha II/N4/Cena5_N4T2.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha II/N4/N4T2.jpg'),
+  },
+  '2-5': {
+    horizontal: [
+      require('../../assets/mangas/Trilha II/N5/Cena1_N5T2.jpg'),
+      require('../../assets/mangas/Trilha II/N5/Cena2_N5T2.jpg'),
+      require('../../assets/mangas/Trilha II/N5/Cena3_N5T2.jpg'),
+      require('../../assets/mangas/Trilha II/N5/Cena4_N5T2.jpg'),
+      require('../../assets/mangas/Trilha II/N5/Cena5_N5T2.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha II/N5/N5T2.jpg'),
+  },
+  '3-1': {
+    horizontal: [
+      require('../../assets/mangas/Trilha III/N1/Cena1_N1T3.jpg'),
+      require('../../assets/mangas/Trilha III/N1/Cena2_N1T3.jpg'),
+      require('../../assets/mangas/Trilha III/N1/Cena3_N1T3.jpg'),
+      require('../../assets/mangas/Trilha III/N1/Cena4_N1T3.jpg'),
+      require('../../assets/mangas/Trilha III/N1/Cena5_N1T3.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha III/N1/N1T3.jpg'),
+  },
+  '3-2': {
+    horizontal: [
+      require('../../assets/mangas/Trilha III/N2/Cena1_N2T3.jpg'),
+      require('../../assets/mangas/Trilha III/N2/Cena2_N2T3.jpg'),
+      require('../../assets/mangas/Trilha III/N2/Cena3_N2T3.jpg'),
+      require('../../assets/mangas/Trilha III/N2/Cena4_N2T3.jpg'),
+      require('../../assets/mangas/Trilha III/N2/Cena5_N2T3.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha III/N2/N2T3.jpg'),
+  },
+  '3-3': {
+    horizontal: [
+      require('../../assets/mangas/Trilha III/N3/Cena1_N3T3.jpg'),
+      require('../../assets/mangas/Trilha III/N3/Cena2_N3T3.jpg'),
+      require('../../assets/mangas/Trilha III/N3/Cena3_N3T3.jpg'),
+      require('../../assets/mangas/Trilha III/N3/Cena4_N3T3.jpg'),
+      require('../../assets/mangas/Trilha III/N3/Cena5_N3T3.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha III/N3/N3T3.jpg'),
+  },
+  '3-4': {
+    horizontal: [
+      require('../../assets/mangas/Trilha III/N4/Cena1_N4T3.jpg'),
+      require('../../assets/mangas/Trilha III/N4/Cena2_N4T3.jpg'),
+      require('../../assets/mangas/Trilha III/N4/Cena3_N4T3.jpg'),
+      require('../../assets/mangas/Trilha III/N4/Cena4_N4T3.jpg'),
+      require('../../assets/mangas/Trilha III/N4/Cena5_N4T3.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha III/N4/N4T3.jpg'),
+  },
+  '3-5': {
+    horizontal: [
+      require('../../assets/mangas/Trilha III/N5/Cena1_N5T3.jpg'),
+      require('../../assets/mangas/Trilha III/N5/Cena2_N5T3.jpg'),
+      require('../../assets/mangas/Trilha III/N5/Cena3_N5T3.jpg'),
+      require('../../assets/mangas/Trilha III/N5/Cena4_N5T3.jpg'),
+      require('../../assets/mangas/Trilha III/N5/Cena5_N5T3.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha III/N5/N5T3.jpg'),
+  },
+};
+
+const MangaScreen = ({ route }) => {
+  const { trailNumber, levelNumber } = route.params; // Adicionado levelNumber
   const [orientation, setOrientation] = useState(null);
   const [windowDimensions, setWindowDimensions] = useState(Dimensions.get('window'));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -19,13 +173,18 @@ const MangaScreen = ({route}) => {
   const [buttonPosition] = useState(new Animated.Value(1));
   const navigation = useNavigation();
 
-  const images = [
-    require('../../assets/mangas/trilha1/nivel1/quadrinho1.jpeg'),
-    require('../../assets/mangas/trilha1/nivel1/quadrinho2.jpeg'),
-    require('../../assets/mangas/trilha1/nivel1/quadrinho3.jpeg'),
-    require('../../assets/mangas/trilha1/nivel1/quadrinho4.jpeg'),
-    require('../../assets/mangas/trilha1/nivel1/quadrinho5.jpeg'),
-  ];
+  // Seleciona as imagens com base na trilha e nível, ou usa as imagens padrão
+  const getMangaImages = () => {
+    const key = `${trailNumber}-${levelNumber}`;
+    console.log('Key generated:', key);  // Adicione logs para verificar a chave gerada
+    if (mangaData[key]) {
+      return mangaData[key];
+    }
+    console.warn(`Key ${key} not found, falling back to 1-1`);  // Adicione logs para verificar fallback
+    return mangaData['1-1'];
+  };
+
+  const { horizontal: images, vertical: verticalImage } = getMangaImages();
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -34,8 +193,8 @@ const MangaScreen = ({route}) => {
     };
 
     const setInitialOrientation = async () => {
-      const { orientation } = await ScreenOrientation.getOrientationAsync();
-      setOrientation(orientation);
+      const orientationInfo = await ScreenOrientation.getOrientationAsync();
+      setOrientation(orientationInfo);
       updateDimensions();
     };
 
@@ -113,7 +272,7 @@ const MangaScreen = ({route}) => {
       scrollViewRef.current.scrollTo({ x: newIndex * windowDimensions.width * 0.8, animated: true });
       setCurrentIndex(newIndex);
     } else {
-      navigation.navigate('QuestionScreen', {trailNumber: trailNumber});
+      navigation.navigate('QuestionScreen', { trailNumber, levelNumber }); // Passa levelNumber
     }
   };
 
@@ -196,7 +355,7 @@ const MangaScreen = ({route}) => {
   const renderVerticalContent = () => (
     <>
       <Animated.Image
-        source={require('../../assets/mangas/trilha1/nivel1/quadrinho-completo.jpeg')}
+        source={verticalImage}
         style={[
           styles.mangaImageVertical,
           { opacity: mangaFadeAnim, height: windowDimensions.height * 0.7 },
@@ -205,7 +364,7 @@ const MangaScreen = ({route}) => {
       />
       <TouchableOpacity
         style={styles.rightArrowVertical}
-        onPress={() => navigation.navigate('QuestionScreen', {trailNumber: trailNumber})}
+        onPress={() => navigation.navigate('QuestionScreen', { trailNumber, levelNumber })} // Passa levelNumber
       >
         <Text style={styles.arrowText}>{">"}</Text>
       </TouchableOpacity>
@@ -386,6 +545,5 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 });
-
 
 export default MangaScreen;
