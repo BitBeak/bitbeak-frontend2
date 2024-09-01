@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -6,29 +6,33 @@ import { AuthContext } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const QuizzQuestionScreen = ({ route }) => {
-  const { question, nextScreenParams, currentQuestionIndex, trailNumber, correctAnswers = 0 } = route.params;
+  const { question, currentQuestionIndex, trailNumber, correctAnswers = 0, questionsHistory = [] } = route.params;
   const navigation = useNavigation();
-  const { userId, selectedLevel, addXp, addFeathers } = useContext(AuthContext);
+  const { userId, selectedLevel } = useContext(AuthContext);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false); 
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [nextScreenParams, setNextScreenParams] = useState(null);
 
-  console.log('Iniciando QuizzQuestionScreen');
-  console.log('Params recebidos:', route.params);
+  useEffect(() => {
+    setSelectedOption(null);  // Reseta a seleção quando a tela é montada
+    setIsCorrect(false);
+    setShowFeedback(false);
+  }, [question]);
 
   const handleOptionPress = async (index) => {
-    console.log('Opção selecionada:', index);
     setSelectedOption(index);
-    const correct = question.options[index].correct;
+    const correct = question.opcoes[index].correct;
     setIsCorrect(correct);
 
+    // Atualiza o histórico de questões respondidas
     const resposta = {
       IdTrilha: trailNumber,
       IdNivelTrilha: selectedLevel,
       IdUsuario: userId,
       IdQuestaoAleatoria: question.idQuestao,
-      IdOpcaoEscolhidaUsuario: question.options[index].id,
-      QuestoesRespondidas: [],
+      IdOpcaoEscolhidaUsuario: question.opcoes[index].idOpcao,
+      QuestoesRespondidas: questionsHistory,  // Envia o histórico de questões respondidas
     };
 
     console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
@@ -42,16 +46,40 @@ const QuizzQuestionScreen = ({ route }) => {
         body: JSON.stringify(resposta),
       });
 
-      console.log(`Status da resposta da API: ${response.status}`);
-
       if (!response.ok) {
-        console.error(`Erro na resposta da API. Status: ${response.status}`);
         throw new Error('Erro ao enviar a resposta.');
       }
 
       const data = await response.json();
+      console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
 
-      console.log('Resposta do servidor:', JSON.stringify(data, null, 2));
+      const acertosAntes = correctAnswers;
+      const acertosDepois = data.contadorAcertos;
+
+      if (acertosDepois > acertosAntes) {
+        setIsCorrect(true);
+      } else {
+        setIsCorrect(false);
+      }
+
+      // Atualiza o histórico de questões respondidas com o novo dado do servidor
+      const updatedHistory = data.questoesRespondidas;
+
+      setNextScreenParams({
+        question: {
+          idQuestao: data.questao.idQuestao,
+          enunciado: data.questao.enunciado,
+          tipo: data.questao.tipo,
+          opcoes: data.questao.opcoes, // Verificação de segurança para garantir que options não seja undefined
+          lacunas: data.questao.lacunas,
+          codeFill: data.questao.codeFill,
+          codigo: data.questao.codigo,
+        },
+        currentQuestionIndex: currentQuestionIndex + 1,
+        trailNumber,
+        correctAnswers: data.contadorAcertos,
+        questionsHistory: updatedHistory,  // Passa o histórico atualizado para a próxima tela
+      });
 
       setShowFeedback(true); 
     } catch (error) {
@@ -60,9 +88,32 @@ const QuizzQuestionScreen = ({ route }) => {
   };
 
   const handleNextPress = () => {
-    console.log('Navegando para a próxima questão com params:', JSON.stringify(nextScreenParams, null, 2));
+    if (!nextScreenParams || !nextScreenParams.question) {
+      console.error('nextScreenParams ou nextScreenParams.question não está definido');
+      return;
+    }
+
     setShowFeedback(false); 
-    navigation.navigate('QuestionScreen', nextScreenParams);
+
+    const { tipo } = nextScreenParams.question;
+
+    switch(tipo) {
+        case 0:
+            navigation.navigate('QuizzQuestionScreen', {
+              ...nextScreenParams,
+              key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
+            });
+            break;
+        case 1:
+            navigation.navigate('MatchColumnsScreen', nextScreenParams);
+            break;
+        case 3:
+            navigation.navigate('CodeFillScreen', nextScreenParams);
+            break;
+        default:
+            console.error('Tipo de questão desconhecido:', tipo);
+            break;
+    }
   };
 
   return (
@@ -86,24 +137,28 @@ const QuizzQuestionScreen = ({ route }) => {
         </View>
         <View style={styles.body}>
           <View style={styles.questionContainer}>
-            <Text style={styles.questionText}>{question.question}</Text>
+            <Text style={styles.questionText}>{question.enunciado}</Text>
           </View>
-          {question.options.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.button,
-                selectedOption === index && styles.selectedOption,
-              ]}
-              onPress={() => handleOptionPress(index)}
-              disabled={selectedOption !== null}
-            >
-              <Text style={[
-                styles.buttonText,
-                selectedOption === index && styles.selectedButtonText,
-              ]}>{option.text}</Text>
-            </TouchableOpacity>
-          ))}
+          {question.opcoes && question.opcoes.length > 0 ? ( // Verificação para evitar erro se options for undefined ou vazio
+            question.opcoes.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.button,
+                  selectedOption === index && styles.selectedOption,
+                ]}
+                onPress={() => handleOptionPress(index)}
+                disabled={selectedOption !== null}
+              >
+                <Text style={[
+                  styles.buttonText,
+                  selectedOption === index && styles.selectedButtonText,
+                ]}>{option.texto}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text>Nenhuma opção disponível</Text>
+          )}
           {selectedOption !== null && (
             <View style={[
               styles.modal,

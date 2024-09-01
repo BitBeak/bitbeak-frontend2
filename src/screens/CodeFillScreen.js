@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,11 +20,10 @@ import { AuthContext } from '../context/AuthContext';
 const CodeFillScreen = ({ route }) => {
   const {
     question,
-    nextScreenParams,
     currentQuestionIndex,
     trailNumber,
     correctAnswers = 0,
-    incorrectQuestions = [],
+    questionsHistory = [],
   } = route.params;
   
   const navigation = useNavigation();
@@ -34,6 +33,12 @@ const CodeFillScreen = ({ route }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [nextScreenParams, setNextScreenParams] = useState(null); // Estado para armazenar os parâmetros da próxima tela
+
+  // Resetar o input toda vez que a tela é montada
+  useEffect(() => {
+    setCodeInput('');
+  }, [question]);
 
   const handleSendPress = async () => {
     setIsSending(true);
@@ -45,7 +50,7 @@ const CodeFillScreen = ({ route }) => {
       IdUsuario: userId,
       IdQuestaoAleatoria: question.idQuestao,
       RespostaUsuario: codeInput,
-      QuestoesRespondidas: [],
+      QuestoesRespondidas: questionsHistory,
     };
 
     console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
@@ -76,6 +81,25 @@ const CodeFillScreen = ({ route }) => {
         setIsCorrect(false);
       }
 
+      const updatedHistory = data.questoesRespondidas;
+
+      // Atualiza o estado com os parâmetros da próxima tela
+      setNextScreenParams({
+        question: {
+          idQuestao: data.questao.idQuestao,
+          enunciado: data.questao.enunciado,
+          tipo: data.questao.tipo,
+          lacunas: data.questao.lacunas,
+          codeFill: data.questao.codeFill,
+          codigo: data.questao.codigo,
+          opcoes: data.questao.opcoes,
+        },
+        currentQuestionIndex: currentQuestionIndex + 1,
+        trailNumber,
+        correctAnswers: data.contadorAcertos,
+        questionsHistory: updatedHistory,
+      });
+
       setShowFeedback(true);
 
       console.log('Resposta do servidor:', JSON.stringify(data, null, 2));
@@ -89,9 +113,32 @@ const CodeFillScreen = ({ route }) => {
   };
 
   const handleNextPress = () => {
-    console.log('Navegando para a próxima questão com params:', JSON.stringify(nextScreenParams, null, 2));
+    if (!nextScreenParams || !nextScreenParams.question) {
+      console.error('nextScreenParams ou nextScreenParams.question não está definido');
+      return;
+    }
+
     setShowFeedback(false);
-    navigation.navigate('QuestionScreen', nextScreenParams);
+
+    const { tipo } = nextScreenParams.question;
+
+    switch (tipo) {
+      case 0:
+        navigation.navigate('QuizzQuestionScreen', nextScreenParams);
+        break;
+      case 1:
+        navigation.navigate('MatchColumnsScreen', nextScreenParams);
+        break;
+      case 3:
+        navigation.navigate('CodeFillScreen', {
+          ...nextScreenParams,
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única
+        });
+        break;
+      default:
+        console.error('Tipo de questão desconhecido:', tipo);
+        break;
+    }
   };
 
   return (

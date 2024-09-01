@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -8,34 +8,40 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const COLORS = ['#FF7043', '#66BB6A', '#42A5F5', '#AB47BC'];
 
 const MatchColumnsScreen = ({ route }) => {
-    
-  const { question, nextScreenParams, currentQuestionIndex = [], trailNumber } = route.params;
+  const { question, currentQuestionIndex, trailNumber, questionsHistory = [] } = route.params;
   const navigation = useNavigation();
-  const {userId, selectedLevel, correctAnswers} = useContext(AuthContext);
+  const { userId, selectedLevel, correctAnswers } = useContext(AuthContext);
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [selectedRight, setSelectedRight] = useState(null);
   const [pairs, setPairs] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const idQuestao = question.idQuestao;  
+  const [nextScreenParams, setNextScreenParams] = useState(null); // Estado para armazenar os parâmetros da próxima tela
+  const idQuestao = question.idQuestao;
+
+  useEffect(() => {
+    setSelectedLeft(null);
+    setSelectedRight(null);
+    setPairs([]);
+    setShowFeedback(false);
+    setIsCorrect(false);
+  }, [question]);
 
   const handleLeftSelect = (item) => {
     setSelectedLeft(item);
-    if (selectedRight) { 
-        setPairs([...pairs, { 
-            left: item, 
-            right: selectedRight, 
+    if (selectedRight) {
+        const newPairs = [...pairs, {
+            left: item,
+            right: selectedRight,
             color: COLORS[pairs.length % COLORS.length],
-            idLacuna: item.idLacuna 
-        }]);
+            idLacuna: item.idLacuna
+        }];
+        setPairs(newPairs);
         setSelectedLeft(null);
         setSelectedRight(null);
-        if (pairs.length + 1 === question.options.length) {
-            checkAnswers([...pairs, { 
-                left: item, 
-                right: selectedRight, 
-                idLacuna: item.idLacuna 
-            }]);
+
+        if (newPairs.length === question.lacunas.length) {
+            checkAnswers(newPairs);
         }
     }
 };
@@ -43,91 +49,127 @@ const MatchColumnsScreen = ({ route }) => {
 const handleRightSelect = (item) => {
     setSelectedRight(item);
     if (selectedLeft) {
-        setPairs([...pairs, { 
-            left: selectedLeft, 
-            right: item, 
+        const newPairs = [...pairs, {
+            left: selectedLeft,
+            right: item,
             color: COLORS[pairs.length % COLORS.length],
-            idLacuna: selectedLeft.idLacuna 
-        }]);
+            idLacuna: selectedLeft.idLacuna
+        }];
+        setPairs(newPairs);
         setSelectedLeft(null);
         setSelectedRight(null);
-        if (pairs.length + 1 === question.options.length) {
-            checkAnswers([...pairs, { 
-                left: selectedLeft, 
-                right: item, 
-                idLacuna: selectedLeft.idLacuna 
-            }]);
+
+        if (newPairs.length === question.lacunas.length) {
+            checkAnswers(newPairs);
         }
     }
 };
 
-const checkAnswers = (finalPairs) => {
-  responderQuestao(finalPairs); 
-};
+  const checkAnswers = (finalPairs) => {
+    responderQuestao(finalPairs);
+  };
 
-const responderQuestao = async (finalPairs) => {
-  const requestBody = {
+  const responderQuestao = async (finalPairs) => {
+    const requestBody = {
       idTrilha: trailNumber,
       idNivelTrilha: selectedLevel,
       idUsuario: userId,
-      idQuestaoAleatoria: idQuestao, 
-      QuestoesRespondidas: [], 
+      idQuestaoAleatoria: idQuestao,
+      QuestoesRespondidas: questionsHistory,
       respostasLacunas: finalPairs.map(pair => ({
-          idLacuna: pair.idLacuna,
-          respostaColunaA: pair.left.left,
-          respostaColunaB: pair.right.right,
+        idLacuna: pair.idLacuna,
+        respostaColunaA: pair.left.colunaA,
+        respostaColunaB: pair.right.colunaB,
       })),
-  };
+    };
 
-  console.log('Enviando para a API:', JSON.stringify(requestBody, null, 2));
+    console.log('Enviando para a API:', JSON.stringify(requestBody, null, 2));
 
-  try {
+    try {
       const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       });
 
-      console.log(`Status da resposta da API: ${response.status}`);
-
       if (!response.ok) {
-          console.error(`Erro na resposta da API. Status: ${response.status}`);
-          throw new Error('Erro ao responder a questão.');
+        console.error(`Erro na resposta da API. Status: ${response.status}`);
+        throw new Error('Erro ao responder a questão.');
       }
 
       const data = await response.json();
+
+      console.log('Dados recebidos da API:', data);
+      // Verifique se há erros na lógica abaixo
       const acertosAntes = correctAnswers;
       const acertosDepois = data.contadorAcertos;
 
-      if (acertosDepois > acertosAntes) {
-          setIsCorrect(true);
-      } else {
-          setIsCorrect(false);
-      }
+      setIsCorrect(acertosDepois > acertosAntes);
+
+      // Atualiza o histórico de questões respondidas
+      const updatedHistory = data.questoesRespondidas;
+
+      setNextScreenParams({
+        question: {
+          idQuestao: data.questao.idQuestao,
+          enunciado: data.questao.enunciado,
+          tipo: data.questao.tipo,
+          lacunas: data.questao.lacunas,
+          codeFill: data.questao.codeFill,
+          codigo: data.questao.codigo,
+          opcoes: data.questao.opcoes,
+        },
+        currentQuestionIndex: currentQuestionIndex + 1,
+        trailNumber,
+        correctAnswers: data.contadorAcertos,
+        questionsHistory: updatedHistory,
+      });
 
       setShowFeedback(true);
-
-      console.log('Resposta do servidor:', JSON.stringify(data, null, 2));
-  } catch (error) {
+    } catch (error) {
       console.error('Erro na requisição:', error);
       setIsCorrect(false);
       setShowFeedback(true);
-  }
+    }
 };
 
   const handleNextPress = () => {
+    if (!nextScreenParams || !nextScreenParams.question) {
+        console.error('nextScreenParams ou nextScreenParams.question não está definido');
+        return;
+    }
+
     setShowFeedback(false);
-    navigation.navigate('QuestionScreen', {trailNumber: trailNumber});
-  };
+
+    const { tipo } = nextScreenParams.question;
+
+    switch (tipo) {
+      case 0:
+        navigation.navigate('QuizzQuestionScreen', nextScreenParams);
+        break;
+      case 1:
+        navigation.navigate('MatchColumnsScreen', {
+          ...nextScreenParams,
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
+        });
+        break;
+      case 3:
+        navigation.navigate('CodeFillScreen', nextScreenParams);
+        break;
+      default:
+        console.error('Tipo de questão desconhecido:', tipo);
+        break;
+    }
+};
 
   const isPaired = (item, side) => {
-    return pairs.some(pair => pair[side].left === item.left || pair[side].right === item.right);
+    return pairs.some(pair => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
   };
 
   const getPairedStyle = (item, side) => {
-    const pair = pairs.find(pair => pair[side].left === item.left || pair[side].right === item.right);
+    const pair = pairs.find(pair => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
     if (pair) {
       return { backgroundColor: pair.color };
     }
@@ -156,51 +198,51 @@ const responderQuestao = async (finalPairs) => {
         <View style={styles.body}>
           <Text style={styles.title}>RELACIONE OS TERMOS!</Text>
           <View style={styles.leftColumn}>
-            {question.options.map((item) => (
+            {question.lacunas.map((item) => (
               <TouchableOpacity
-                key={item.left}
+                key={`${item.idLacuna}-left`} // Adicionei uma chave única para garantir a renderização correta
                 style={[
                   styles.leftOption,
-                  selectedLeft && selectedLeft.left === item.left && styles.selectedOption,
+                  selectedLeft && selectedLeft.colunaA === item.colunaA && styles.selectedOption,
                   getPairedStyle(item, 'left'),
                 ]}
                 onPress={() => handleLeftSelect(item)}
                 disabled={isPaired(item, 'left')}
               >
-                <Text style={styles.optionText}>{item.left}</Text>
+                <Text style={styles.optionText}>{item.colunaA}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <View style={styles.rightColumnContainer}>
             <View style={styles.rightColumn}>
-              {question.options.slice(0, Math.ceil(question.options.length / 2)).map((item) => (
+              {question.lacunas.slice(0, Math.ceil(question.lacunas.length / 2)).map((item) => (
                 <TouchableOpacity
-                  key={item.right}
+                  key={`${item.idLacuna}-right`} // Adicionei uma chave única para garantir a renderização correta
                   style={[
                     styles.rightOption,
-                    selectedRight && selectedRight.right === item.right && styles.selectedOption,
+                    selectedRight && selectedRight.colunaB === item.colunaB && styles.selectedOption,
                     getPairedStyle(item, 'right'),
                   ]}
                   onPress={() => handleRightSelect(item)}
                   disabled={isPaired(item, 'right')}
                 >
-                  <Text style={styles.optionText}>{item.right}</Text>
+                  <Text style={styles.optionText}>{item.colunaB}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <View style={styles.rightColumn}>
-              {question.options.slice(Math.ceil(question.options.length / 2)).map((item) => (
+              {question.lacunas.slice(Math.ceil(question.lacunas.length / 2)).map((item) => (
                 <TouchableOpacity
-                  key={item.right}
+                  key={`${item.idLacuna}-right`} // Adicionei uma chave única para garantir a renderização correta
                   style={[
                     styles.rightOption,
-                    selectedRight && selectedRight.right === item.right && styles.selectedOption,
+                    selectedRight && selectedRight.colunaB === item.colunaB && styles.selectedOption,
                     getPairedStyle(item, 'right'),
                   ]}
                   onPress={() => handleRightSelect(item)}
                   disabled={isPaired(item, 'right')}
                 >
-                  <Text style={styles.optionText}>{item.right}</Text>
+                  <Text style={styles.optionText}>{item.colunaB}</Text>
                 </TouchableOpacity>
               ))}
             </View>
