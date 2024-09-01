@@ -84,6 +84,7 @@ const QuestionScreen = ({ route }) => {
               question: {
                 ...questionData.questao,
                 question: questionData.questao.enunciado,
+                codigo: questionData.questao.codigo,
                 opcoes: questionData.questao.opcoes.map((opcao) => ({
                   texto: opcao.texto,
                   correta: opcao.correta,

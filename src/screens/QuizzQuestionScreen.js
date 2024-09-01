@@ -55,7 +55,6 @@ const QuizzQuestionScreen = ({ route }) => {
 
         if (response.status === 400) {
             if (responseData.includes('O usuário já concluiu este nível.')) {
-                // Caso o nível já tenha sido concluído anteriormente
                 setAlertTitle('Nível já concluído!');
                 setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
                 setAlertVisible(true);
@@ -64,7 +63,6 @@ const QuizzQuestionScreen = ({ route }) => {
             }
         } else if (response.status === 200) {
             if (responseData.includes('Parabéns')) {
-                // Caso o usuário tenha concluído o nível com sucesso
                 setAlertTitle('Parabéns!');
                 setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
                 setAlertVisible(true);
@@ -73,7 +71,6 @@ const QuizzQuestionScreen = ({ route }) => {
                 setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
                 setAlertVisible(true);
             } else {
-                // Continue o processamento normal se não houver mensagem específica
                 const data = JSON.parse(responseData);
                 console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
 
@@ -100,7 +97,7 @@ const QuizzQuestionScreen = ({ route }) => {
                     incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
                     questionsHistory: updatedHistory,
                 });
-                console.log('Atualizou essa porra');
+
                 setShowFeedback(true);
             }
         } else {
@@ -163,6 +160,11 @@ const QuizzQuestionScreen = ({ route }) => {
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>{question.enunciado}</Text>
           </View>
+          {question.codigo && (
+            <View style={styles.codeContainer}>
+              <Text style={styles.codeText}>{question.codigo}</Text>
+            </View>
+          )}
           {question.opcoes && question.opcoes.length > 0 ? (
             question.opcoes.map((option, index) => (
               <TouchableOpacity
@@ -265,6 +267,18 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  codeContainer: {
+    backgroundColor: '#2E3A59',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    width: '90%',
+  },
+  codeText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'monospace',
   },
   button: {
     marginBottom: 12,
