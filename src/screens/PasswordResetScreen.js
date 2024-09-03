@@ -69,6 +69,7 @@ const PasswordResetScreen = ({ navigation }) => {
 
       const text = await response.text();
       console.log('Token Request API Response:', text);
+      console.log(response.status);
 
       if (response.ok) {
         setStage(2);

@@ -4,6 +4,7 @@ import QuizzQuestionScreen from './QuizzQuestionScreen';
 import MatchColumnsScreen from './MatchColumnsScreen';
 import CodeFillScreen from './CodeFillScreen';
 import { AuthContext } from '../context/AuthContext';
+import CodeQuestionScreen from './CodeQuestionScreen';
 
 const QuestionScreen = ({ route }) => {
   const { trailNumber } = route.params;
@@ -112,6 +113,23 @@ const QuestionScreen = ({ route }) => {
               },
             },
           }}
+        />
+      );
+      case 2:
+    return (
+      <CodeQuestionScreen
+        route={{
+          params: {
+            ...initialParams,
+            question: {
+              ...questionData.questao,
+              idQuestao: questionData.questao.idQuestao,
+              prompt: questionData.questao.enunciado,
+              correctCode: questionData.questao.solucaoEsperada,
+            },
+          }
+        }
+      }
         />
       );
     case 3:

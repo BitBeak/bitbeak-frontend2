@@ -104,7 +104,6 @@ const MatchColumnsScreen = ({ route }) => {
   
       if (response.status === 400) {
         if (responseData.includes('O usuário já concluiu este nível.')) {
-            // Caso o nível já tenha sido concluído anteriormente
             setAlertTitle('Nível já concluído!');
             setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
             setAlertVisible(true);
@@ -113,7 +112,6 @@ const MatchColumnsScreen = ({ route }) => {
         }
     } else if (response.status === 200) {
         if (responseData.includes('Parabéns')) {
-            // Caso o usuário tenha concluído o nível com sucesso
             setAlertTitle('Parabéns!');
             setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
             setAlertVisible(true);
@@ -122,7 +120,6 @@ const MatchColumnsScreen = ({ route }) => {
             setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
             setAlertVisible(true);
         } else {
-          // Continue o processamento normal se não houver mensagem específica
           const data = JSON.parse(responseData);
           console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
   
@@ -177,8 +174,11 @@ const MatchColumnsScreen = ({ route }) => {
       case 1:
         navigation.navigate('MatchColumnsScreen', {
           ...nextScreenParams,
-          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
         });
+        break;
+        case 2:
+        navigation.navigate('CodeQuestionScreen', nextScreenParams);
         break;
       case 3:
         navigation.navigate('CodeFillScreen', nextScreenParams);
@@ -215,7 +215,7 @@ const MatchColumnsScreen = ({ route }) => {
                 colors={['#FDD835', '#FBC02D']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / 6) * 100}%` }]}
+                style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / 7) * 100}%` }]}
               />
             </View>
           </View>
@@ -287,8 +287,8 @@ const MatchColumnsScreen = ({ route }) => {
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertVisible(false); // Feche o modal
-          navigation.navigate('HomeScreen'); // Navegue para HomeScreen após o fechamento do modal
+          setAlertVisible(false); 
+          navigation.navigate('HomeScreen'); 
         }}
       />
     </SafeAreaView>
@@ -342,8 +342,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 30,
-    marginTop: -40
+    marginBottom: 10,
   },
   leftColumn: {
     flexDirection: 'row',
@@ -364,20 +363,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   leftOption: {
-    width: 150,
-    height: 50,
+    width: 160,
+    height: 70,
     backgroundColor: '#7DB3FF',
     borderWidth: 1,
     borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 5,
     marginHorizontal: 5,
   },
   rightOption: {
     width: 165,
-    height: 130,
+    height: 160,
     backgroundColor: '#FFD700',
     borderWidth: 1,
     borderColor: '#FFFFFF',
@@ -387,7 +386,7 @@ const styles = StyleSheet.create({
     marginVertical: 3,
   },
   selectedOption: {
-    backgroundColor: '#FDD835',
+    backgroundColor: '#FFFFFF',
     borderColor: '#FFFFFF',
   },
   optionText: {

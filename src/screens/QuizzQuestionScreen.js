@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext'; 
@@ -19,7 +19,7 @@ const QuizzQuestionScreen = ({ route }) => {
   const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
-    setSelectedOption(null);  // Reseta a seleção quando a tela é montada
+    setSelectedOption(null); 
     setIsCorrect(false);
     setShowFeedback(false);
   }, [question]);
@@ -106,7 +106,14 @@ const QuizzQuestionScreen = ({ route }) => {
     } catch (error) {
         console.error('Erro na requisição:', error);
     }
-};
+  };
+
+  const formatCode = (code) => {
+    return code
+      .replace(/;/g, ';\n')     
+      .replace(/{/g, '{\n  ')     
+      .replace(/}/g, '\n}');       
+  };
 
   const handleNextPress = () => {
     if (!nextScreenParams || !nextScreenParams.question) {
@@ -122,12 +129,15 @@ const QuizzQuestionScreen = ({ route }) => {
       case 0:
         navigation.navigate('QuizzQuestionScreen', {
           ...nextScreenParams,
-          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`, // Gera uma chave única para forçar a recriação da tela
+          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
         });
         break;
       case 1:
         navigation.navigate('MatchColumnsScreen', nextScreenParams);
         break;
+      case 2:
+        navigation.navigate('CodeQuestionScreen', nextScreenParams);
+        break;  
       case 3:
         navigation.navigate('CodeFillScreen', nextScreenParams);
         break;
@@ -151,18 +161,18 @@ const QuizzQuestionScreen = ({ route }) => {
                 colors={['#FDD835', '#FBC02D']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / 6) * 100}%` }]}
+                style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / 7) * 100}%` }]}
               />
             </View>
           </View>
         </View>
-        <View style={styles.body}>
+        <ScrollView contentContainerStyle={styles.body}>
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>{question.enunciado}</Text>
           </View>
           {question.codigo && (
             <View style={styles.codeContainer}>
-              <Text style={styles.codeText}>{question.codigo}</Text>
+              <Text style={styles.codeText}>{formatCode(question.codigo)}</Text>
             </View>
           )}
           {question.opcoes && question.opcoes.length > 0 ? (
@@ -185,26 +195,26 @@ const QuizzQuestionScreen = ({ route }) => {
           ) : (
             <Text>Nenhuma opção disponível</Text>
           )}
-          {selectedOption !== null && (
-            <View style={[
-              styles.modal,
-              isCorrect ? styles.correctModal : styles.incorrectModal,
-            ]}>
-              <Text style={styles.modalText}>{isCorrect ? 'EXCELENTE!' : 'ERRADO!'}</Text>
-              <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
-                <Text style={styles.nextButtonText}>Próxima →</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+        </ScrollView>
+        {selectedOption !== null && (
+          <View style={[
+            styles.modal,
+            isCorrect ? styles.correctModal : styles.incorrectModal,
+          ]}>
+            <Text style={styles.modalText}>{isCorrect ? 'EXCELENTE!' : 'ERRADO!'}</Text>
+            <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
+              <Text style={styles.nextButtonText}>Próxima →</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </LinearGradient>
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertVisible(false); // Feche o modal
-          navigation.navigate('HomeScreen'); // Navegue para HomeScreen após o fechamento do modal
+          setAlertVisible(false); 
+          navigation.navigate('HomeScreen');
         }}
       />
     </SafeAreaView>
@@ -249,22 +259,23 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   body: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 20,
   },
   questionContainer: {
     backgroundColor: '#FFFFFF',
-    paddingVertical: 55,
+    paddingVertical: 10,
     borderRadius: 30,
     width: '90%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
   },
   questionText: {
     color: '#005288',
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -305,8 +316,8 @@ const styles = StyleSheet.create({
   },
   modal: {
     position: 'absolute',
-    bottom: -10,
-    width: '107%',
+    bottom: 0,
+    width: '110%',
     paddingVertical: 15,
     paddingHorizontal: 20,
     flexDirection: 'row',

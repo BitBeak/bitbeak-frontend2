@@ -31,21 +31,24 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchUserData = async () => {
     try {
+      
       const progressResponse = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
       const progressData = await progressResponse.json();
-
+      
       setUserData({
         newLevel: progressData.nivelAtual,
         newXp: (progressData.experienciaUsuario / progressData.experienciaNecessaria) * 100,
         newFeathers: progressData.penas,
       });
-
+      
+    
       await Promise.all(
         trails.map(async (trail) => {
+
           try {
+            
             const response = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterNiveisConcluidos/${trail.id}/${userId}`);
             const contentType = response.headers.get("content-type");
-
             if (response.status === 400 || (contentType && contentType.indexOf("text/plain") !== -1)) {
               const textData = await response.text();
               if (textData.includes("Nenhum nível concluído encontrado")) {
@@ -85,7 +88,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleStudyGuide = (trail) => {
     if (trail && trail.unlocked) {
-      Alert.alert("Guia de Estudo", `Você clicou em 'Guia de Estudo ${trail.title}'!`);
+      Alert.alert("Guia de Estudo", `Você clicou em 'Mangáteca ${trail.title}'!`);
     } else {
       Alert.alert("Trilha Bloqueada", "Esta trilha está bloqueada. Complete a trilha anterior para desbloquear.");
     }
@@ -139,7 +142,7 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => handleStudyGuide(trail)}
                 disabled={!trail.unlocked}
               >
-                <Text style={styles.trailButtonText}>GUIA DE ESTUDO</Text>
+                <Text style={styles.trailButtonText}>MANGÁTECA</Text>
               </TouchableOpacity>
             </View>
           ))}

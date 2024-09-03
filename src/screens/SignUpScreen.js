@@ -256,7 +256,7 @@ const SignUpScreen = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Sucesso!</Text>
             <Text style={styles.modalMessage}>
-              Cadastro realizado com sucesso!
+              Cadastro realizado!
             </Text>
             <TouchableOpacity
               style={styles.modalButton}

@@ -4,7 +4,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useNavigation } from '@react-navigation/native';
 
-// Mapeamento de imagens por trilha e nível
 const mangaData = {
   '1-1': {
     horizontal: [
@@ -159,7 +158,7 @@ const mangaData = {
 };
 
 const MangaScreen = ({ route }) => {
-  const { trailNumber, levelNumber } = route.params; // Adicionado levelNumber
+  const { trailNumber, levelNumber } = route.params;
   const [orientation, setOrientation] = useState(null);
   const [windowDimensions, setWindowDimensions] = useState(Dimensions.get('window'));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -173,14 +172,13 @@ const MangaScreen = ({ route }) => {
   const [buttonPosition] = useState(new Animated.Value(1));
   const navigation = useNavigation();
 
-  // Seleciona as imagens com base na trilha e nível, ou usa as imagens padrão
   const getMangaImages = () => {
     const key = `${trailNumber}-${levelNumber}`;
-    console.log('Key generated:', key);  // Adicione logs para verificar a chave gerada
+    console.log('Key generated:', key);
     if (mangaData[key]) {
       return mangaData[key];
     }
-    console.warn(`Key ${key} not found, falling back to 1-1`);  // Adicione logs para verificar fallback
+    console.warn(`Key ${key} not found, falling back to 1-1`);
     return mangaData['1-1'];
   };
 
@@ -272,7 +270,7 @@ const MangaScreen = ({ route }) => {
       scrollViewRef.current.scrollTo({ x: newIndex * windowDimensions.width * 0.8, animated: true });
       setCurrentIndex(newIndex);
     } else {
-      navigation.navigate('QuestionScreen', { trailNumber, levelNumber }); // Passa levelNumber
+      navigation.navigate('QuestionScreen', { trailNumber, levelNumber });
     }
   };
 
@@ -344,9 +342,11 @@ const MangaScreen = ({ route }) => {
             </View>
           ))}
         </ScrollView>
-        <TouchableOpacity style={styles.rightArrow} onPress={handleNext}>
-          <Text style={styles.arrowText}>{">"}</Text>
-        </TouchableOpacity>
+        {currentIndex < images.length - 1 && (
+          <TouchableOpacity style={styles.rightArrow} onPress={handleNext}>
+            <Text style={styles.arrowText}>{">"}</Text>
+          </TouchableOpacity>
+        )}
       </Animated.View>
       {renderLinks()}
     </>
@@ -364,7 +364,7 @@ const MangaScreen = ({ route }) => {
       />
       <TouchableOpacity
         style={styles.rightArrowVertical}
-        onPress={() => navigation.navigate('QuestionScreen', { trailNumber, levelNumber })} // Passa levelNumber
+        onPress={() => navigation.navigate('QuestionScreen', { trailNumber, levelNumber })}
       >
         <Text style={styles.arrowText}>{">"}</Text>
       </TouchableOpacity>
@@ -385,26 +385,28 @@ const MangaScreen = ({ route }) => {
           </Animated.View>
         )}
         {showManga && (
-          orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
-          orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT
-            ? renderHorizontalImages()
-            : renderVerticalContent()
+          <>
+            {orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+            orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT
+              ? renderHorizontalImages()
+              : renderVerticalContent()}
+            <Animated.View
+              style={[
+                styles.expandButton,
+                {
+                  bottom: buttonPosition.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [275, 0],
+                  }),
+                },
+              ]}
+            >
+              <TouchableOpacity onPress={toggleLinksVisibility}>
+                <MaterialIcons name={linksVisible ? "expand-less" : "expand-more"} size={24} color="#fff" />
+              </TouchableOpacity>
+            </Animated.View>
+          </>
         )}
-        <Animated.View
-          style={[
-            styles.expandButton,
-            {
-              bottom: buttonPosition.interpolate({
-                inputRange: [0, 1],
-                outputRange: [275, 0],
-              }),
-            },
-          ]}
-        >
-          <TouchableOpacity onPress={toggleLinksVisibility}>
-            <MaterialIcons name={linksVisible ? "expand-less" : "expand-more"} size={24} color="#fff" />
-          </TouchableOpacity>
-        </Animated.View>
       </View>
     </SafeAreaView>
   );
