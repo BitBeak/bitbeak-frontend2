@@ -14,6 +14,7 @@ import QuizzQuestionScreen from './src/screens/QuizzQuestionScreen';
 import MatchColumnsScreen from './src/screens/MatchColumnsScreen';
 import CodeQuestionScreen from './src/screens/CodeQuestionScreen';
 import CodeFillScreen from './src/screens/CodeFillScreen';
+import ChallengesScreen from './src/screens/ChallengesScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -23,7 +24,7 @@ export default function App() {
     <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="InitialScreen"
+          initialRouteName="ChallengesScreen"
           screenOptions={{
             headerShown: false,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
@@ -55,6 +56,7 @@ export default function App() {
           <Stack.Screen name="MatchColumnsScreen" component={MatchColumnsScreen} />
           <Stack.Screen name="CodeQuestionScreen" component={CodeQuestionScreen} />
           <Stack.Screen name="CodeFillScreen" component={CodeFillScreen} />
+          <Stack.Screen name="ChallengesScreen" component={ChallengesScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
