@@ -95,27 +95,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: 'Poppins-Bold', // Apenas alteramos a fonte
-    fontSize: 20, // Mantém o tamanho original
+    fontFamily: 'Poppins-Bold',
+    fontSize: 20,
     color: '#FFF',
-    marginVertical: 10,
+    marginVertical: 5,
   },
   challengeCard: {
-    backgroundColor: '#407BFF',
+    backgroundColor: '#74A7CC',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 20,
     marginVertical: 5,
+    // Estilos de sombra para iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    // Estilos de elevação para Android
+    elevation: 6,
   },
   challengeText: {
     fontSize: 16,
-    color: '#FFF',
+    color: '#012768',
   },
   opponent: {
     fontWeight: 'bold',
+    color: '#FFF'
   },
   score: {
     fontSize: 16,
     color: '#FFD700',
+    backgroundColor: '#012768',
+    width: 105,
+    marginTop: 5
   },
   turn: {
     color: '#FFD700',
