@@ -14,7 +14,7 @@ export default function RankingScreen({ navigation }) {
   useEffect(() => {
     const fetchRanking = async () => {
       try {
-        const response = await fetch(`http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/${userId}`);
+        const response = await fetch(`http://192.168.0.16:5159/api/Jogo/RankingQuinzenal/${userId}`);
         const data = await response.json();
 
         setTopUsuarios(data.topUsuarios || []);

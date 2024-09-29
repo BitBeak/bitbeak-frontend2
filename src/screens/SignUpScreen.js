@@ -96,7 +96,7 @@ const SignUpScreen = ({ navigation }) => {
 
     try {
       const response = await fetch(
-        'http://192.168.0.2:5159/api/Usuarios/CadastrarUsuario',
+        'http://192.168.0.16:5159/api/Usuarios/CadastrarUsuario',
         {
           method: 'POST',
           headers: {

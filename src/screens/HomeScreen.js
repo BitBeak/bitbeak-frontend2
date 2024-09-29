@@ -32,7 +32,7 @@ const HomeScreen = ({ navigation }) => {
   const fetchUserData = async () => {
     try {
       
-      const progressResponse = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
+      const progressResponse = await fetch(`http://192.168.0.16:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
       const progressData = await progressResponse.json();
       
       setUserData({
@@ -47,7 +47,7 @@ const HomeScreen = ({ navigation }) => {
 
           try {
             
-            const response = await fetch(`http://192.168.0.2:5159/api/Usuarios/ObterNiveisConcluidos/${trail.id}/${userId}`);
+            const response = await fetch(`http://192.168.0.16:5159/api/Usuarios/ObterNiveisConcluidos/${trail.id}/${userId}`);
             const contentType = response.headers.get("content-type");
             if (response.status === 400 || (contentType && contentType.indexOf("text/plain") !== -1)) {
               const textData = await response.text();

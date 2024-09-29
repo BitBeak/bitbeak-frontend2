@@ -28,7 +28,7 @@ const QuestionScreen = ({ route }) => {
       console.log('Request Body:', requestBody);
 
       try {
-        const response = await fetch('http://192.168.0.2:5159/api/Jogo/IniciarNivel', {
+        const response = await fetch('http://192.168.0.16:5159/api/Jogo/IniciarNivel', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',

@@ -64,7 +64,7 @@ const LoginScreen = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://192.168.0.2:5159/api/Login', {
+      const response = await fetch('http://192.168.0.16:5159/api/Login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

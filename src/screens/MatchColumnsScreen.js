@@ -92,7 +92,7 @@ const MatchColumnsScreen = ({ route }) => {
     console.log('Enviando para a API:', JSON.stringify(requestBody, null, 2));
   
     try {
-      const response = await fetch('http://192.168.0.2:5159/api/Jogo/ResponderQuestao', {
+      const response = await fetch('http://192.168.0.16:5159/api/Jogo/ResponderQuestao', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
