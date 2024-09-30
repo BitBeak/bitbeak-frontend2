@@ -16,6 +16,7 @@ import CodeQuestionScreen from './src/screens/CodeQuestionScreen';
 import CodeFillScreen from './src/screens/CodeFillScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
 import MissionScreen from './src/screens/MissionScreen';
+import FriendsListScreen from './src/screens/FriendsListScreen';
 import RankingScreen from './src/screens/RankingScreen';
 
 const Stack = createStackNavigator();
@@ -58,6 +59,7 @@ export default function App() {
           <Stack.Screen name="CodeQuestionScreen" component={CodeQuestionScreen} />
           <Stack.Screen name="CodeFillScreen" component={CodeFillScreen} />
           <Stack.Screen name="ChallengesScreen" component={ChallengesScreen} />
+          <Stack.Screen name="FriendsListScreen" component={FriendsListScreen} />
           <Stack.Screen name="MissionScreen" component={MissionScreen} />
           <Stack.Screen name="RankingScreen" component={RankingScreen} />
         </Stack.Navigator>

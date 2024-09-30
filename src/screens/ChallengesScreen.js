@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font';
-import Header from '../components/Header';  // Certifique-se de que o caminho do arquivo está correto
-import NavBar from '../components/NavBar';  // Certifique-se de que o caminho do arquivo está correto
+import Header from '../components/Header';
+import NavBar from '../components/NavBar';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// Simulando os dados
 const ongoingChallenges = [
   {
     id: '1',
@@ -28,6 +28,11 @@ const ChallengesScreen = ({ navigation }) => {
     'Poppins-Bold': require('../../assets/fonts/Poppins-Bold.ttf'),
   });
 
+  // Função que navega para a tela de amigos
+  const handleNewGamePress = () => {
+    navigation.navigate('FriendsListScreen'); // Substitua 'FriendsListScreen' pelo nome da sua tela de amigos
+  };
+
   if (!fontsLoaded) {
     return <ActivityIndicator size="large" />;
   }
@@ -38,38 +43,57 @@ const ChallengesScreen = ({ navigation }) => {
       style={styles.gradientBackground}
     >
       <View style={styles.container}>
-        {/* Inclui o Header */}
         <Header />
 
-        {/* Título */}
         <View style={styles.titleContainer}>
           <Text style={styles.titleHeader}>DESAFIOS</Text>
         </View>
 
-        {/* Desafios em andamento */}
         <Text style={styles.subtitle}>Em andamento</Text>
         <FlatList
           data={ongoingChallenges}
           keyExtractor={(item) => item.id}
           ListFooterComponent={(
-            <TouchableOpacity style={styles.newGameButton}>
-              <Text style={styles.newGameText}>DESAFIE UM AMIGO! NOVO JOGO</Text>
-            </TouchableOpacity>
+            <View style={styles.newGameContainer}>
+              <View style={styles.iconContainer}>
+                <Icon name="help-circle-outline" size={50} color="#FFD700" />
+              </View>
+              <View style={styles.textAndButtonContainer}>
+                <Text style={styles.newGameLabel}>DESAFIE UM AMIGO!</Text>
+                <TouchableOpacity
+                  style={styles.newGameButton}
+                  onPress={handleNewGamePress} // Adicionando a navegação aqui
+                >
+                  <Text style={styles.newGameButtonText}>NOVO JOGO</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
           renderItem={({ item }) => (
             <View style={styles.challengeCard}>
-              <Text style={styles.challengeText}>
-                Desafiando <Text style={styles.opponent}>{item.opponent}</Text> em {item.topic}
-              </Text>
-              <Text style={styles.score}>PLACAR: {item.score}</Text>
-              {item.yourTurn && <Text style={styles.turn}>SUA VEZ</Text>}
+              <View style={styles.iconContainer}>
+                <Icon name="account-circle" size={40} color="#FFF" />
+              </View>
+              {item.yourTurn && (
+                <View style={styles.sticker}>
+                  <Text style={styles.turnText}>SUA VEZ</Text>
+                </View>
+              )}
+              <View style={styles.infoContainer}>
+                <Text style={styles.challengeText}>
+                  Desafiando <Text style={styles.opponent}>{item.opponent}</Text> em {item.topic}
+                </Text>
+                <View style={styles.scoreContainer}>
+                  <Text style={styles.score}>PLACAR: {item.score}</Text>
+                </View>
+              </View>
             </View>
           )}
-          contentContainerStyle={styles.flatListContent} // Remove espaçamentos extras
+          contentContainerStyle={styles.flatListContent}
         />
 
-        {/* Inclui a Navbar */}
         <NavBar navigation={navigation} currentScreen="ChallengesScreen" />
+        <View style={styles.spacer} />
       </View>
     </LinearGradient>
   );
@@ -81,71 +105,144 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 20,
+    padding: 15,
   },
   titleContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   titleHeader: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 40,
+    fontSize: 34,
     color: '#FFFFFF',
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 20,
-    color: '#FFF',
-    marginVertical: 5,
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginVertical: 4,
   },
   challengeCard: {
     backgroundColor: '#74A7CC',
     padding: 15,
-    borderRadius: 20,
-    marginVertical: 5,
-    // Estilos de sombra para iOS
+    borderRadius: 15,
+    marginVertical: 7, // Diminuindo a margem vertical para reduzir a distância entre os cards
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    // Estilos de elevação para Android
-    elevation: 6,
+    elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  iconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#006FC2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  sticker: {
+    position: 'absolute',
+    top: -10,
+    right: 5,
+    backgroundColor: '#FF6C00',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    zIndex: 1,
+  },
+  turnText: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  infoContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
   },
   challengeText: {
-    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 14,
     color: '#012768',
+    fontWeight: 'bold',
+    lineHeight: 20,
   },
   opponent: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFF'
+    color: '#FFD700',
+  },
+  scoreContainer: {
+    backgroundColor: '#012768',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   score: {
-    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 14,
     color: '#FFD700',
-    backgroundColor: '#012768',
-    width: 105,
-    marginTop: 5
+    textAlign: 'center',
   },
-  turn: {
-    color: '#FFD700',
-    marginTop: 5,
+  newGameContainer: {
+    backgroundColor: '#74A7CC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 15,
+    marginVertical: 6, // Diminuindo a margem vertical para reduzir a distância abaixo deste card
+  },
+  textAndButtonContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingLeft: 30, // Mantendo o texto no local desejado
+  },
+  newGameLabel: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 14,
+    color: '#0A2A53',
+    fontWeight: 'bold',
+    marginBottom: 3,
   },
   newGameButton: {
     backgroundColor: '#FFD700',
-    padding: 15,
-    borderRadius: 10,
+    paddingVertical: 6, // Reduzi a altura do botão para torná-lo mais compacto
+    width: 150, // Aumentando a largura do botão
+    borderRadius: 25,
     alignItems: 'center',
-    marginTop: 5,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    marginTop: 3,
+    marginLeft: -10, // Movendo apenas o botão um pouco mais para a esquerda
   },
-  newGameText: {
+  newGameButtonText: {
+    fontFamily: 'Poppins-Bold',
     fontSize: 16,
     color: '#0A2A53',
     fontWeight: 'bold',
   },
   flatListContent: {
-    paddingBottom: 0, // Remove espaçamento adicional no final da lista
+    paddingBottom: 10,
+  },
+  spacer: {
+    height: 55,
   },
 });
 

@@ -19,8 +19,8 @@ export default function NavBar({ navigation, currentScreen }) {
       <NavItem 
         iconComponent={MaterialCommunityIcons} 
         icon="sword-cross" 
-        onPress={() => navigation.navigate('RewardsScreen')} 
-        isActive={currentScreen === 'RewardsScreen'}
+        onPress={() => navigation.navigate('ChallengesScreen')} 
+        isActive={currentScreen === 'ChallengesScreen'}
       />
       <NavItem 
         icon="trophy" 
