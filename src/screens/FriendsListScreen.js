@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Modal, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../context/AuthContext';
@@ -27,12 +27,15 @@ const FriendsListScreen = ({ navigation }) => {
   const fetchFriends = async () => {
     setLoading(true);
     try {
+      console.log('Buscando lista de amigos...');
       const response = await fetch(`http://192.168.0.16:5159/api/Amizade/ListarAmigos/${userId}`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Lista de amigos recebida:', data);
         setFriends(data);
       } else {
+        console.error('Falha ao buscar amigos. Código da resposta:', response.status);
         setFriends([]);
       }
     } catch (error) {
@@ -56,16 +59,18 @@ const FriendsListScreen = ({ navigation }) => {
     setIsAddingFriend(true);
 
     try {
+      console.log('Adicionando amigo com código:', friendCode);
       const response = await fetch(`http://192.168.0.16:5159/api/Amizade/AdicionarAmigo?intIdUsuario=${userId}&strCodigoAmizadeAmigo=${friendCode}`, {
         method: 'POST',
       });
 
       if (response.ok) {
+        console.log('Amigo adicionado com sucesso.');
         setModalVisible(false);
         setFriendCode('');
         fetchFriends();
       } else {
-        console.error('Falha ao adicionar amigo. Tente novamente.');
+        console.error('Falha ao adicionar amigo. Código da resposta:', response.status);
       }
     } catch (error) {
       console.error("Erro ao adicionar amigo:", error);
@@ -78,6 +83,7 @@ const FriendsListScreen = ({ navigation }) => {
     setRemovingFriendId(friendId);
 
     try {
+      console.log(`Removendo amigo com ID: ${friendId}`);
       const response = await fetch(`http://192.168.0.16:5159/api/Amizade/RemoverAmizade/${userId}/${friendId}`, {
         method: 'DELETE',
         headers: {
@@ -86,9 +92,10 @@ const FriendsListScreen = ({ navigation }) => {
       });
 
       if (response.ok) {
+        console.log('Amigo removido com sucesso.');
         setFriends((prevFriends) => prevFriends.filter((friend) => friend.idUsuario !== friendId));
       } else {
-        console.error('Erro ao remover amizade:', response.status);
+        console.error('Erro ao remover amizade. Código da resposta:', response.status);
       }
     } catch (error) {
       console.error('Erro ao tentar remover o amigo:', error);
@@ -98,6 +105,7 @@ const FriendsListScreen = ({ navigation }) => {
   };
 
   const handleChallengeFriend = (friendId) => {
+    console.log(`Amigo selecionado para desafio: ${friendId}`);
     setSelectedFriendId(friendId);
     setTrilhaModalVisible(true);
   };
@@ -105,13 +113,15 @@ const FriendsListScreen = ({ navigation }) => {
   const handleSelectTrilha = async (trilha) => {
     setTrilhaModalVisible(false);
     setLoading(true); // Exibir carregamento enquanto o desafio é iniciado
-
+  
     const requestBody = {
       idDesafiante: userId,
       idDesafiado: selectedFriendId,
       idTrilha: trilha.id,
     };
-
+  
+    console.log('Iniciando desafio com os dados:', requestBody);
+  
     try {
       const response = await fetch('http://192.168.0.16:5159/api/Desafio/IniciarDesafio', {
         method: 'POST',
@@ -121,15 +131,36 @@ const FriendsListScreen = ({ navigation }) => {
         },
         body: JSON.stringify(requestBody),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-        // Redirecionar para a QuestionScreen com os dados do desafio
+        console.log('Desafio iniciado com sucesso:', data);
+
+        // Adicionando log específico para o idNivel
+        console.log('idNivel recebido da API:', data.questao.idNivel);
+
+        // Redirecionar para a tela de questão
         navigation.navigate('QuestionScreen', {
           challengeData: data,
+          trailNumber: trilha.id,
+          isChallenge: true,
+          challengeId: data.idDesafio, // Pegando o ID do desafio
+          idNivel: data.questao.idNivel // Adicionando o `idNivel` da resposta
         });
+      } else if (response.status === 400) {
+        const responseBody = await response.text();
+        if (responseBody.includes('Já existe um desafio em andamento entre esses usuários')) {
+          console.warn('Já existe um desafio em andamento entre esses usuários.');
+          Alert.alert(
+            'Desafio em Andamento',
+            'Já existe um desafio em andamento entre esses usuários. Conclua o desafio atual antes de iniciar outro.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          console.error('Erro ao iniciar o desafio. Resposta da API:', responseBody);
+        }
       } else {
-        console.error('Falha ao iniciar o desafio.');
+        console.error('Falha ao iniciar o desafio. Código da resposta:', response.status);
       }
     } catch (error) {
       console.error('Erro ao iniciar o desafio:', error);
@@ -143,10 +174,7 @@ const FriendsListScreen = ({ navigation }) => {
   }
 
   return (
-    <LinearGradient
-      colors={['#012768', '#006FC2']}
-      style={styles.gradientBackground}
-    >
+    <LinearGradient colors={['#012768', '#006FC2']} style={styles.gradientBackground}>
       <View style={styles.container}>
         <Text style={styles.header}>ESCOLHA UM AMIGO PARA DESAFIAR</Text>
 
@@ -263,7 +291,7 @@ const FriendsListScreen = ({ navigation }) => {
   );
 };
 
-// Estilos Atualizados
+// Estilos
 const styles = StyleSheet.create({
   gradientBackground: {
     flex: 1,

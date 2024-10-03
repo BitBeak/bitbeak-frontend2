@@ -25,6 +25,8 @@ const CodeQuestionScreen = ({ route }) => {
     correctAnswers = 0,
     incorrectQuestions = [],
     questionsHistory = [],
+    isChallenge = false,
+    challengeId = null,
   } = route.params;
 
   const navigation = useNavigation();
@@ -50,30 +52,33 @@ const CodeQuestionScreen = ({ route }) => {
     setIsSending(true);
     setIsInputDisabled(true);
 
+    // Definir o endpoint dependendo do contexto (normal ou desafio)
+    const apiEndpoint = isChallenge
+      ? 'http://192.168.0.16:5159/api/Desafio/ResponderQuestaoDesafio'
+      : 'http://192.168.0.16:5159/api/Jogo/ResponderQuestao';
+
     const resposta = {
-      IdTrilha: trailNumber,
-      IdNivelTrilha: selectedLevel,
-      IdUsuario: userId,
+      idDesafio: challengeId, // Apenas se for um desafio
+      idTrilha: trailNumber,
+      idNivelTrilha: selectedLevel,
+      idUsuario: userId,
       idQuestaoAleatoria: question.idQuestao,
-      RespostaUsuario: codeInput,
-      QuestoesRespondidas: questionsHistory,
-      ContadorAcertos: correctAnswers,
-      ContadorErros: incorrectQuestions.length,
+      respostaUsuario: codeInput,
+      questoesRespondidas: questionsHistory,
+      contadorAcertos: correctAnswers,
+      contadorErros: incorrectQuestions.length,
     };
 
-    console.log(question.idQuestaoAleatoria);
     console.log('Enviando para a API:', JSON.stringify(resposta, null, 2));
 
     try {
-      const response = await fetch('http://192.168.0.16:5159/api/Jogo/ResponderQuestao', {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(resposta),
       });
-
-      console.log(`Status da resposta da API: ${response.status}`);
 
       const responseData = await response.text();
 
@@ -96,7 +101,6 @@ const CodeQuestionScreen = ({ route }) => {
           setAlertVisible(true);
         } else {
           const data = JSON.parse(responseData);
-          console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
 
           const acertosAntes = correctAnswers;
           const acertosDepois = data.contadorAcertos;
@@ -105,11 +109,28 @@ const CodeQuestionScreen = ({ route }) => {
 
           const updatedHistory = data.questoesRespondidas;
 
+          // Caso seja uma questão especial, defina o tipo da questão manualmente se necessário
+          let tipoQuestao = data.questao.tipo !== undefined ? data.questao.tipo : data.questao.tipoQuestao;
+
+          if (tipoQuestao === 4) {
+            if (data.questao.opcoes && data.questao.opcoes.length > 0) {
+              tipoQuestao = 0; // Quizz (Múltipla Escolha)
+            } else if (data.questao.lacunas && data.questao.lacunas.length > 0) {
+              tipoQuestao = 1; // Match Columns
+            } else if (data.questao.solucaoEsperada && data.questao.codigo) {
+              tipoQuestao = 2; // Code Question
+            } else if (data.questao.codigo && !data.questao.solucaoEsperada) {
+              tipoQuestao = 3; // Code Fill
+            } else {
+              console.error('Erro: Tipo de questão especial não pôde ser determinado.');
+            }
+          }
+
           setNextScreenParams({
             question: {
               idQuestao: data.questao.idQuestao,
               enunciado: data.questao.enunciado,
-              tipo: data.questao.tipo,
+              tipo: tipoQuestao,
               lacunas: data.questao.lacunas,
               codeFill: data.questao.codeFill,
               codigo: data.questao.codigo,
@@ -120,6 +141,8 @@ const CodeQuestionScreen = ({ route }) => {
             correctAnswers: acertosDepois,
             incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
             questionsHistory: updatedHistory,
+            isChallenge, // Manter se é desafio ou não
+            challengeId, // Manter o ID do desafio se aplicável
           });
 
           setShowFeedback(true);
@@ -137,26 +160,40 @@ const CodeQuestionScreen = ({ route }) => {
   };
 
   const handleNextPress = () => {
+    if (!nextScreenParams || !nextScreenParams.question) {
+      console.error('nextScreenParams ou nextScreenParams.question não está definido');
+      return;
+    }
+
     setShowFeedback(false);
 
     const { tipo } = nextScreenParams.question;
 
-    switch (tipo) {
-      case 0:
-        navigation.navigate('QuizzQuestionScreen', nextScreenParams);
-        break;
-      case 1:
-        navigation.navigate('MatchColumnsScreen', nextScreenParams);
-        break;
-      case 2:
-        navigation.navigate('CodeQuestionScreen', nextScreenParams);
-        break;
-      case 3:
-        navigation.navigate('CodeFillScreen', nextScreenParams);
-        break;
-      default:
-        console.error('Tipo de questão desconhecido:', tipo);
-        break;
+    if (tipo === 4) {
+      // Se for uma questão especial, redirecionar para a tela especial
+      navigation.navigate('SpecialQuestionScreen', {
+        ...nextScreenParams,
+        key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
+      });
+    } else {
+      // Redirecionar para a tela correspondente do tipo
+      switch (tipo) {
+        case 0:
+          navigation.navigate('QuizzQuestionScreen', nextScreenParams);
+          break;
+        case 1:
+          navigation.navigate('MatchColumnsScreen', nextScreenParams);
+          break;
+        case 2:
+          navigation.navigate('CodeQuestionScreen', nextScreenParams);
+          break;
+        case 3:
+          navigation.navigate('CodeFillScreen', nextScreenParams);
+          break;
+        default:
+          console.error('Tipo de questão desconhecido:', tipo);
+          break;
+      }
     }
   };
 
@@ -301,7 +338,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     borderRadius: 10,
     padding: 15,
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'monospace',
     marginBottom: 20,
   },

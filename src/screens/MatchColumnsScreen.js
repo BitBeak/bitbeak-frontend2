@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
@@ -9,7 +9,18 @@ import CustomAlert from '../components/CustomAlert';
 const COLORS = ['#FF7043', '#66BB6A', '#42A5F5', '#AB47BC'];
 
 const MatchColumnsScreen = ({ route }) => {
-  const { question, currentQuestionIndex, trailNumber, questionsHistory = [], correctAnswers = 0, incorrectQuestions = [] } = route.params;
+  const {
+    question,
+    currentQuestionIndex,
+    trailNumber,
+    questionsHistory = [],
+    correctAnswers = 0,
+    incorrectQuestions = [],
+    isChallenge = false,
+    challengeId = null,
+    idNivel = null,
+  } = route.params;
+
   const navigation = useNavigation();
   const { userId, selectedLevel } = useContext(AuthContext);
   const [selectedLeft, setSelectedLeft] = useState(null);
@@ -21,9 +32,9 @@ const MatchColumnsScreen = ({ route }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const idQuestao = question.idQuestao;
 
   useEffect(() => {
+    console.log('Iniciando tela MatchColumns com pergunta:', question);
     setSelectedLeft(null);
     setSelectedRight(null);
     setPairs([]);
@@ -34,12 +45,15 @@ const MatchColumnsScreen = ({ route }) => {
   const handleLeftSelect = (item) => {
     setSelectedLeft(item);
     if (selectedRight) {
-      const newPairs = [...pairs, {
-        left: item,
-        right: selectedRight,
-        color: COLORS[pairs.length % COLORS.length],
-        idLacuna: item.idLacuna
-      }];
+      const newPairs = [
+        ...pairs,
+        {
+          left: item,
+          right: selectedRight,
+          color: COLORS[pairs.length % COLORS.length],
+          idLacuna: item.idLacuna,
+        },
+      ];
       setPairs(newPairs);
       setSelectedLeft(null);
       setSelectedRight(null);
@@ -53,12 +67,15 @@ const MatchColumnsScreen = ({ route }) => {
   const handleRightSelect = (item) => {
     setSelectedRight(item);
     if (selectedLeft) {
-      const newPairs = [...pairs, {
-        left: selectedLeft,
-        right: item,
-        color: COLORS[pairs.length % COLORS.length],
-        idLacuna: selectedLeft.idLacuna
-      }];
+      const newPairs = [
+        ...pairs,
+        {
+          left: selectedLeft,
+          right: item,
+          color: COLORS[pairs.length % COLORS.length],
+          idLacuna: selectedLeft.idLacuna,
+        },
+      ];
       setPairs(newPairs);
       setSelectedLeft(null);
       setSelectedRight(null);
@@ -74,82 +91,89 @@ const MatchColumnsScreen = ({ route }) => {
   };
 
   const responderQuestao = async (finalPairs) => {
+    const apiEndpoint = isChallenge
+      ? 'http://192.168.0.16:5159/api/Desafio/ResponderQuestaoDesafio'
+      : 'http://192.168.0.16:5159/api/Jogo/ResponderQuestao';
+
     const requestBody = {
+      idDesafio: isChallenge ? challengeId : undefined,
       idTrilha: trailNumber,
-      idNivelTrilha: selectedLevel,
       idUsuario: userId,
-      idQuestaoAleatoria: idQuestao,
-      QuestoesRespondidas: questionsHistory,
-      ContadorAcertos: correctAnswers,
-      ContadorErros: incorrectQuestions.length,
-      respostasLacunas: finalPairs.map(pair => ({
+      idQuestaoAleatoria: question.idQuestao,
+      idNivelTrilha: isChallenge ? idNivel : selectedLevel,
+      questoesRespondidas: questionsHistory,
+      contadorAcertos: correctAnswers,
+      contadorErros: incorrectQuestions.length,
+      respostasLacunas: finalPairs.map((pair) => ({
         idLacuna: pair.idLacuna,
         respostaColunaA: pair.left.colunaA,
         respostaColunaB: pair.right.colunaB,
       })),
     };
-  
+
     console.log('Enviando para a API:', JSON.stringify(requestBody, null, 2));
-  
+
     try {
-      const response = await fetch('http://192.168.0.16:5159/api/Jogo/ResponderQuestao', {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
-  
+
       const responseData = await response.text();
-  
+      console.log('Resposta da API:', JSON.stringify(responseData, null, 2));
+
       if (response.status === 400) {
         if (responseData.includes('O usuário já concluiu este nível.')) {
-            setAlertTitle('Nível já concluído!');
-            setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
-            setAlertVisible(true);
-        }  else {
-            throw new Error('Erro desconhecido');
-        }
-    } else if (response.status === 200) {
-        if (responseData.includes('Parabéns')) {
-            setAlertTitle('Parabéns!');
-            setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
-            setAlertVisible(true);
-        } else if (responseData.includes('Jogo finalizado. Tente novamente!')) {
-            setAlertTitle('Jogo finalizado!');
-            setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
-            setAlertVisible(true);
+          setAlertTitle('Nível já concluído!');
+          setAlertMessage(
+            'Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.'
+          );
+          setAlertVisible(true);
         } else {
-          const data = JSON.parse(responseData);
-          console.log('Dados recebidos da API:', JSON.stringify(data, null, 2));
-  
-          const acertosAntes = correctAnswers;
-          const acertosDepois = data.contadorAcertos;
-          const acertou = acertosDepois > acertosAntes;
-          setIsCorrect(acertou);
-  
-          const updatedHistory = data.questoesRespondidas;
-  
-          setNextScreenParams({
-            question: {
-              idQuestao: data.questao.idQuestao,
-              enunciado: data.questao.enunciado,
-              tipo: data.questao.tipo,
-              opcoes: data.questao.opcoes,
-              lacunas: data.questao.lacunas,
-              codeFill: data.questao.codeFill,
-              codigo: data.questao.codigo,
-            },
-            currentQuestionIndex: currentQuestionIndex + 1,
-            trailNumber,
-            correctAnswers: acertosDepois,
-            incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
-            questionsHistory: updatedHistory,
-          });
-  
-          setShowFeedback(true);
+          console.error('Erro desconhecido ao enviar a resposta:', responseData);
+          throw new Error('Erro desconhecido');
         }
+      } else if (response.status === 200) {
+        const data = JSON.parse(responseData);
+
+        const acertosAntes = correctAnswers;
+        const acertosDepois = data.contadorAcertos;
+        const acertou = acertosDepois > acertosAntes;
+        setIsCorrect(acertou);
+
+        const updatedHistory = data.questoesRespondidas;
+
+        // Caso seja uma questão especial, utilize o campo "perguntaEspecial" em vez do "questao"
+        const nextQuestion = data.perguntaEspecial || data.questao;
+
+        setNextScreenParams({
+          question: {
+            idQuestao: nextQuestion.idQuestao,
+            enunciado: nextQuestion.enunciado,
+            tipo: nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao,
+            opcoes: nextQuestion.opcoes,
+            lacunas: nextQuestion.lacunas,
+            codeFill: nextQuestion.codeFill,
+            codigo: nextQuestion.codigo,
+          },
+          currentQuestionIndex: currentQuestionIndex + 1,
+          trailNumber,
+          correctAnswers: acertosDepois,
+          incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+          questionsHistory: updatedHistory,
+          isChallenge,
+          challengeId,
+          idNivel: route.params.idNivel,
+          // Adicionando perguntaEspecial para o próximo passo caso seja uma questão especial
+          perguntaEspecial: nextQuestion,
+        });
+
+        setShowFeedback(true);
       } else {
+        console.error('Erro inesperado ao enviar a resposta. Código:', response.status);
         throw new Error(`Erro ao enviar a resposta: ${response.status}`);
       }
     } catch (error) {
@@ -167,34 +191,44 @@ const MatchColumnsScreen = ({ route }) => {
 
     const { tipo } = nextScreenParams.question;
 
-    switch (tipo) {
-      case 0:
-        navigation.navigate('QuizzQuestionScreen', nextScreenParams);
-        break;
-      case 1:
-        navigation.navigate('MatchColumnsScreen', {
-          ...nextScreenParams,
-          key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
-        });
-        break;
+    if (tipo === 4) {
+      // Se for uma questão especial, redirecionar para a tela especial com perguntaEspecial
+      navigation.navigate('SpecialQuestionScreen', {
+        ...nextScreenParams,
+        key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
+        perguntaEspecial: nextScreenParams.question,
+      });
+    } else {
+      // Navegar para a próxima tela conforme o tipo de questão
+      switch (tipo) {
+        case 0:
+          navigation.navigate('QuizzQuestionScreen', nextScreenParams);
+          break;
+        case 1:
+          navigation.navigate('MatchColumnsScreen', {
+            ...nextScreenParams,
+            key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
+          });
+          break;
         case 2:
-        navigation.navigate('CodeQuestionScreen', nextScreenParams);
-        break;
-      case 3:
-        navigation.navigate('CodeFillScreen', nextScreenParams);
-        break;
-      default:
-        console.error('Tipo de questão desconhecido:', tipo);
-        break;
+          navigation.navigate('CodeQuestionScreen', nextScreenParams);
+          break;
+        case 3:
+          navigation.navigate('CodeFillScreen', nextScreenParams);
+          break;
+        default:
+          console.error('Tipo de questão desconhecido:', tipo);
+          break;
+      }
     }
   };
 
   const isPaired = (item, side) => {
-    return pairs.some(pair => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
+    return pairs.some((pair) => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
   };
 
   const getPairedStyle = (item, side) => {
-    const pair = pairs.find(pair => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
+    const pair = pairs.find((pair) => pair[side].colunaA === item.colunaA || pair[side].colunaB === item.colunaB);
     if (pair) {
       return { backgroundColor: pair.color };
     }
@@ -287,8 +321,8 @@ const MatchColumnsScreen = ({ route }) => {
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertVisible(false); 
-          navigation.navigate('HomeScreen'); 
+          setAlertVisible(false);
+          navigation.navigate('HomeScreen');
         }}
       />
     </SafeAreaView>
@@ -296,6 +330,7 @@ const MatchColumnsScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
+  // Estilos mantidos iguais aos anteriores para consistência visual
   container: {
     flex: 1,
     padding: 10,

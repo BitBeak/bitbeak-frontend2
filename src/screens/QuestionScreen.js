@@ -3,52 +3,47 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import QuizzQuestionScreen from './QuizzQuestionScreen';
 import MatchColumnsScreen from './MatchColumnsScreen';
 import CodeFillScreen from './CodeFillScreen';
-import { AuthContext } from '../context/AuthContext';
 import CodeQuestionScreen from './CodeQuestionScreen';
+import { AuthContext } from '../context/AuthContext';
 
 const QuestionScreen = ({ route }) => {
-  const { trailNumber } = route.params;
   const { userId, selectedLevel } = useContext(AuthContext);
-  const [questionData, setQuestionData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { trailNumber, challengeData, isChallenge = false, challengeId = null, idNivel = null } = route.params || {};
+  
+  const [questionData, setQuestionData] = useState(challengeData ? challengeData : null);
+  const [loading, setLoading] = useState(!challengeData); // Se `challengeData` estiver disponível, não precisa carregar
 
   useEffect(() => {
-    if (!userId || !trailNumber || !selectedLevel) {
-      console.error('Missing required data for API call');
-      return;
-    }
+    // Se não for um desafio, precisamos buscar a questão
+    if (!challengeData && userId && trailNumber && selectedLevel) {
+      const fetchQuestionData = async () => {
+        const requestBody = {
+          idTrilha: trailNumber,
+          idNivelTrilha: selectedLevel,
+          idUsuario: userId,
+        };
 
-    const fetchQuestionData = async () => {
-      const requestBody = {
-        idTrilha: trailNumber,
-        idNivelTrilha: selectedLevel,
-        idUsuario: userId,
+        try {
+          const response = await fetch('http://192.168.0.16:5159/api/Jogo/IniciarNivel', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+          const data = await response.json();
+          setQuestionData(data);
+        } catch (error) {
+          console.error('Erro ao buscar dados da questão:', error);
+        } finally {
+          setLoading(false);
+        }
       };
 
-      console.log('Request Body:', requestBody);
-
-      try {
-        const response = await fetch('http://192.168.0.16:5159/api/Jogo/IniciarNivel', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
-        const data = await response.json();
-
-        console.log('API Response:', data);
-        setQuestionData(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchQuestionData();
-  }, [userId, trailNumber, selectedLevel]);
+      fetchQuestionData();
+    }
+  }, [userId, trailNumber, selectedLevel, challengeData]);
 
   if (loading) {
     return (
@@ -67,14 +62,19 @@ const QuestionScreen = ({ route }) => {
     );
   }
 
+  // Parâmetros iniciais para serem passados para a próxima tela
   const initialParams = {
-    trailNumber,
+    trailNumber: challengeData ? challengeData.idTrilha : trailNumber,
     currentQuestionIndex: 0,
     correctAnswers: 0,
     incorrectQuestions: [],
     questionsHistory: [],
+    isChallenge,
+    challengeId,
+    idNivel: idNivel || (challengeData ? challengeData.questao.idNivel : selectedLevel),
   };
 
+  // Determina qual tela de pergunta renderizar com base no tipo da questão
   switch (questionData.questao.tipo) {
     case 0:
       return (
@@ -115,21 +115,20 @@ const QuestionScreen = ({ route }) => {
           }}
         />
       );
-      case 2:
-    return (
-      <CodeQuestionScreen
-        route={{
-          params: {
-            ...initialParams,
-            question: {
-              ...questionData.questao,
-              idQuestao: questionData.questao.idQuestao,
-              prompt: questionData.questao.enunciado,
-              correctCode: questionData.questao.solucaoEsperada,
+    case 2:
+      return (
+        <CodeQuestionScreen
+          route={{
+            params: {
+              ...initialParams,
+              question: {
+                ...questionData.questao,
+                idQuestao: questionData.questao.idQuestao,
+                prompt: questionData.questao.enunciado,
+                correctCode: questionData.questao.solucaoEsperada,
+              },
             },
-          }
-        }
-      }
+          }}
         />
       );
     case 3:
