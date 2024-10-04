@@ -21,7 +21,8 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       if (fontsLoaded) {
-        fetchUserData();
+        // fetchUserData(); // Comentado para evitar chamadas ao back-end
+        setLoading(false); // Define o estado como carregado
       }
       return () => {
         setLoading(true);
@@ -29,9 +30,10 @@ const HomeScreen = ({ navigation }) => {
     }, [fontsLoaded])
   );
 
+  /*
   const fetchUserData = async () => {
     try {
-      
+      // Comentado para evitar chamadas ao back-end
       const progressResponse = await fetch(`http://192.168.0.16:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
       const progressData = await progressResponse.json();
       
@@ -41,12 +43,9 @@ const HomeScreen = ({ navigation }) => {
         newFeathers: progressData.penas,
       });
       
-    
       await Promise.all(
         trails.map(async (trail) => {
-
           try {
-            
             const response = await fetch(`http://192.168.0.16:5159/api/Usuarios/ObterNiveisConcluidos/${trail.id}/${userId}`);
             const contentType = response.headers.get("content-type");
             if (response.status === 400 || (contentType && contentType.indexOf("text/plain") !== -1)) {
@@ -77,6 +76,7 @@ const HomeScreen = ({ navigation }) => {
       Alert.alert("Erro", "Falha ao carregar os dados do servidor.");
     }
   };
+  */
 
   const handleEnterTrail = (trail) => {
     if (trail && trail.unlocked) {
@@ -88,7 +88,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleStudyGuide = (trail) => {
     if (trail && trail.unlocked) {
-      Alert.alert("Guia de Estudo", `Você clicou em 'Mangáteca ${trail.title}'!`);
+      navigation.navigate('MangatecaScreen', { trailNumber: trail.id });
     } else {
       Alert.alert("Trilha Bloqueada", "Esta trilha está bloqueada. Complete a trilha anterior para desbloquear.");
     }
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 10,
-    marginBottom: 45
+    marginBottom: 45,
   },
   dot: {
     width: 12,

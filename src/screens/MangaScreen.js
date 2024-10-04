@@ -158,7 +158,7 @@ const mangaData = {
 };
 
 const MangaScreen = ({ route }) => {
-  const { trailNumber, levelNumber } = route.params;
+  const { trailNumber, levelNumber, fromMangaLibrary } = route.params; // Identificar se veio da Mangáteca
   const [orientation, setOrientation] = useState(null);
   const [windowDimensions, setWindowDimensions] = useState(Dimensions.get('window'));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -174,12 +174,7 @@ const MangaScreen = ({ route }) => {
 
   const getMangaImages = () => {
     const key = `${trailNumber}-${levelNumber}`;
-    console.log('Key generated:', key);
-    if (mangaData[key]) {
-      return mangaData[key];
-    }
-    console.warn(`Key ${key} not found, falling back to 1-1`);
-    return mangaData['1-1'];
+    return mangaData[key] || mangaData['1-1'];
   };
 
   const { horizontal: images, vertical: verticalImage } = getMangaImages();
@@ -324,11 +319,6 @@ const MangaScreen = ({ route }) => {
           style={[styles.scrollView, { width: windowDimensions.width * 0.8 }]}
           ref={scrollViewRef}
           scrollEnabled={false}
-          onMomentumScrollEnd={(e) => {
-            const offset = e.nativeEvent.contentOffset.x;
-            const index = Math.floor(offset / (windowDimensions.width * 0.8));
-            setCurrentIndex(index);
-          }}
         >
           {images.map((image, index) => (
             <View key={index} style={{ width: windowDimensions.width * 0.8 }}>
@@ -342,7 +332,8 @@ const MangaScreen = ({ route }) => {
             </View>
           ))}
         </ScrollView>
-        {currentIndex < images.length - 1 && (
+        {/* A seta da direita só é exibida se não vier do fluxo da Mangáteca */}
+        {!fromMangaLibrary && currentIndex < images.length - 1 && (
           <TouchableOpacity style={styles.rightArrow} onPress={handleNext}>
             <Text style={styles.arrowText}>{">"}</Text>
           </TouchableOpacity>
@@ -362,12 +353,15 @@ const MangaScreen = ({ route }) => {
         ]}
         resizeMode="contain"
       />
-      <TouchableOpacity
-        style={styles.rightArrowVertical}
-        onPress={() => navigation.navigate('QuestionScreen', { trailNumber, levelNumber })}
-      >
-        <Text style={styles.arrowText}>{">"}</Text>
-      </TouchableOpacity>
+      {/* A seta direita vertical só aparece se não for chamada da Mangateca */}
+      {!fromMangaLibrary && (
+        <TouchableOpacity
+          style={styles.rightArrowVertical}
+          onPress={() => navigation.navigate('QuestionScreen', { trailNumber, levelNumber })}
+        >
+          <Text style={styles.arrowText}>{">"}</Text>
+        </TouchableOpacity>
+      )}
       {renderLinks()}
     </>
   );
