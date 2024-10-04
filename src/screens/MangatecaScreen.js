@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -8,20 +8,57 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const MangatecaScreen = ({ route }) => {
   const navigation = useNavigation();
   const { trailNumber } = route.params;
+  const [trailData, setTrailData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const fromMangateca = true;
 
-  // Lista de títulos de níveis simulados
-  const levelTitles = [
-    'Nível 1 - Algoritmos de Busca e Ordenação em Grandes Volumes de Dados',
-    'Nível 2 - Estruturas de Dados Avançadas',
-    'Nível 3 - Fundamentos de Programação Funcional',
-    'Nível 4 - Programação Paralela e Concorrente',
-    'Nível 5 - Complexidade de Algoritmos e Análise de Desempenho',
-  ];
+  useEffect(() => {
+    // Função para buscar os dados da trilha a partir da API usando `fetch`
+    const fetchTrailData = async () => {
+      try {
+        const url = `http://192.168.0.16:5159/api/Trilhas/ListarDadosTrilha/${trailNumber}`;
+        console.log(`Requisição enviada para: ${url}`);
+        
+        // Fazendo a requisição para obter os dados da trilha
+        const response = await fetch(url);
+        console.log(`Resposta bruta:`, response);
+
+        // Verifica se a resposta foi bem-sucedida
+        if (!response.ok) {
+          throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`Dados recebidos da API:`, data);
+
+        setTrailData(data);
+      } catch (error) {
+        console.error('Erro ao buscar dados da API:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrailData();
+  }, [trailNumber]);
 
   // Função para navegar para MangaScreen passando o nível selecionado
   const handleLevelSelection = (levelNumber) => {
-    navigation.navigate('MangaScreen', { trailNumber, levelNumber});
+    console.log(`Navegando para MangaScreen com trailNumber: ${trailNumber}, levelNumber: ${levelNumber}`);
+    navigation.navigate('MangaScreen', { trailNumber, levelNumber, fromMangateca });
   };
+
+  if (loading) {
+    return (
+      <SafeAreaProvider>
+        <LinearGradient colors={['#012768', '#006FC2']} style={styles.gradientBackground}>
+          <View style={styles.container}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          </View>
+        </LinearGradient>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -32,7 +69,9 @@ const MangatecaScreen = ({ route }) => {
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Icon name="arrow-left" size={28} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.headerText}>Mangáteca - Trilha {trailNumber}</Text>
+            <Text style={styles.headerText}>
+              {`Mangáteca - Trilha ${trailNumber}`}
+            </Text>
           </View>
           <Text style={styles.subHeaderText}>
             Selecione um nível abaixo para visualizar o conteúdo do mangá correspondente.
@@ -40,18 +79,18 @@ const MangatecaScreen = ({ route }) => {
 
           {/* Botões para selecionar os níveis */}
           <View style={styles.levelsContainer}>
-            {levelTitles.map((title, index) => (
+            {trailData && trailData.niveis && trailData.niveis.map((level) => (
               <TouchableOpacity
-                key={index}
+                key={level.idNivel}
                 style={styles.levelCard}
-                onPress={() => handleLevelSelection(index + 1)}
+                onPress={() => handleLevelSelection(level.nivel)}
               >
                 <View style={styles.iconContainer}>
                   <Icon name="book-open-page-variant" size={40} color="#FFD700" />
                 </View>
                 <View style={styles.infoContainer}>
                   <Text style={styles.levelButtonText}>
-                    {title}
+                    {level.nivelName}
                   </Text>
                 </View>
                 <Icon name="chevron-right" size={30} color="#ffffff" />
@@ -93,11 +132,10 @@ const styles = StyleSheet.create({
   },
   subHeaderText: {
     color: '#F0F0F0',
-    fontSize: 16, // Aumentei ligeiramente o tamanho da fonte para destacar melhor o texto
+    fontSize: 16,
     fontWeight: '500',
-    // Removi 'Poppins-Medium' e deixei sem especificar uma fonte para usar a padrão do sistema
     textAlign: 'center',
-    marginBottom: 15, // Diminuí a distância para aproximar do primeiro nível
+    marginBottom: 15,
     lineHeight: 22,
   },
   levelsContainer: {
@@ -112,14 +150,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 15,
     borderRadius: 15,
-    marginVertical: 5, // Reduzido para diminuir o espaço entre os níveis
+    marginVertical: 5,
     width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    minHeight: 100, // Garantindo espaço suficiente para títulos longos
+    minHeight: 100,
   },
   iconContainer: {
     width: 50,
@@ -136,7 +174,7 @@ const styles = StyleSheet.create({
   },
   levelButtonText: {
     color: '#FFFFFF',
-    fontSize: 15, // Fonte ligeiramente aumentada para melhor legibilidade
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Poppins-Bold',
     lineHeight: 20,
