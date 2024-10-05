@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -40,6 +41,7 @@ const CodeQuestionScreen = ({ route }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const [turnEndedModalVisible, setTurnEndedModalVisible] = useState(false);
 
   useEffect(() => {
     if (question.codigo) {
@@ -52,13 +54,12 @@ const CodeQuestionScreen = ({ route }) => {
     setIsSending(true);
     setIsInputDisabled(true);
 
-    // Definir o endpoint dependendo do contexto (normal ou desafio)
     const apiEndpoint = isChallenge
       ? 'http://192.168.0.16:5159/api/Desafio/ResponderQuestaoDesafio'
       : 'http://192.168.0.16:5159/api/Jogo/ResponderQuestao';
 
     const resposta = {
-      idDesafio: challengeId, // Apenas se for um desafio
+      idDesafio: challengeId,
       idTrilha: trailNumber,
       idNivelTrilha: selectedLevel,
       idUsuario: userId,
@@ -81,24 +82,21 @@ const CodeQuestionScreen = ({ route }) => {
       });
 
       const responseData = await response.text();
+      console.log('Resposta da API:', JSON.stringify(responseData, null, 2));
 
       if (response.status === 400) {
         if (responseData.includes('O usuário já concluiu este nível.')) {
           setAlertTitle('Nível já concluído!');
-          setAlertMessage('Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.');
+          setAlertMessage(
+            'Você já completou este nível anteriormente, mas pode continuar jogando para revisar as questões ou tentar melhorar sua pontuação.'
+          );
           setAlertVisible(true);
         } else {
           throw new Error('Erro desconhecido');
         }
       } else if (response.status === 200) {
-        if (responseData.includes('Parabéns')) {
-          setAlertTitle('Parabéns!');
-          setAlertMessage('Você completou este nível e agora pode seguir para o nível seguinte.');
-          setAlertVisible(true);
-        } else if (responseData.includes('Jogo finalizado. Tente novamente!')) {
-          setAlertTitle('Jogo finalizado!');
-          setAlertMessage('Você errou um número considerável de questões, revise o conteúdo e tente novamente.');
-          setAlertVisible(true);
+        if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
+          setTurnEndedModalVisible(true);
         } else {
           const data = JSON.parse(responseData);
 
@@ -109,7 +107,6 @@ const CodeQuestionScreen = ({ route }) => {
 
           const updatedHistory = data.questoesRespondidas;
 
-          // Caso seja uma questão especial, defina o tipo da questão manualmente se necessário
           let tipoQuestao = data.questao.tipo !== undefined ? data.questao.tipo : data.questao.tipoQuestao;
 
           if (tipoQuestao === 4) {
@@ -141,8 +138,8 @@ const CodeQuestionScreen = ({ route }) => {
             correctAnswers: acertosDepois,
             incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
             questionsHistory: updatedHistory,
-            isChallenge, // Manter se é desafio ou não
-            challengeId, // Manter o ID do desafio se aplicável
+            isChallenge,
+            challengeId,
           });
 
           setShowFeedback(true);
@@ -169,31 +166,22 @@ const CodeQuestionScreen = ({ route }) => {
 
     const { tipo } = nextScreenParams.question;
 
-    if (tipo === 4) {
-      // Se for uma questão especial, redirecionar para a tela especial
-      navigation.navigate('SpecialQuestionScreen', {
-        ...nextScreenParams,
-        key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
-      });
-    } else {
-      // Redirecionar para a tela correspondente do tipo
-      switch (tipo) {
-        case 0:
-          navigation.navigate('QuizzQuestionScreen', nextScreenParams);
-          break;
-        case 1:
-          navigation.navigate('MatchColumnsScreen', nextScreenParams);
-          break;
-        case 2:
-          navigation.navigate('CodeQuestionScreen', nextScreenParams);
-          break;
-        case 3:
-          navigation.navigate('CodeFillScreen', nextScreenParams);
-          break;
-        default:
-          console.error('Tipo de questão desconhecido:', tipo);
-          break;
-      }
+    switch (tipo) {
+      case 0:
+        navigation.navigate('QuizzQuestionScreen', nextScreenParams);
+        break;
+      case 1:
+        navigation.navigate('MatchColumnsScreen', nextScreenParams);
+        break;
+      case 2:
+        navigation.navigate('CodeQuestionScreen', nextScreenParams);
+        break;
+      case 3:
+        navigation.navigate('CodeFillScreen', nextScreenParams);
+        break;
+      default:
+        console.error('Tipo de questão desconhecido:', tipo);
+        break;
     }
   };
 
@@ -270,6 +258,30 @@ const CodeQuestionScreen = ({ route }) => {
           </TouchableOpacity>
         </View>
       )}
+      {/* Modal para indicar que o turno foi encerrado */}
+      <Modal
+        visible={turnEndedModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setTurnEndedModalVisible(false)}
+      >
+        <View style={styles.challengeModalContainer}>
+          <View style={styles.challengeModalContent}>
+            <Text style={styles.challengeModalText}>
+              Turno encerrado, agora é a vez do outro jogador.
+            </Text>
+            <TouchableOpacity
+              style={styles.challengeModalButton}
+              onPress={() => {
+                setTurnEndedModalVisible(false);
+                navigation.navigate('ChallengesScreen');
+              }}
+            >
+              <Text style={styles.challengeModalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -389,6 +401,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  challengeModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  challengeModalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  challengeModalText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  challengeModalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#006FC2',
+    borderRadius: 10,
+  },
+  challengeModalButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',

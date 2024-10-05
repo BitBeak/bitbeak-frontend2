@@ -43,22 +43,27 @@ export default function RankingScreen({ navigation }) {
       <Text style={styles.subHeader}>Atualizado quinzenalmente! Quanto melhor colocado, mais penas você ganha!</Text>
       <FlatList
         data={getRankingData()}
-        renderItem={({ item, index }) => (
-          <View style={index === 5 ? styles.posicaoAtualContainer : styles.rankingItemContainer}>
-            {index === 5 && (
-              <Text style={styles.posicaoAtualLabel}>SUA POSIÇÃO ATUAL:</Text>
-            )}
-            <RankingItem
-              item={{
-                id: item.idUsuario,
-                name: item.nome,
-                score: item.experienciaQuinzenal,
-                rank: item.posicao,
-                avatar: require('../../assets/bitbeak-logo.png')
-              }}
-            />
-          </View>
-        )}
+        renderItem={({ item, index }) => {
+          const rankingData = getRankingData();
+          const isLastItem = index === rankingData.length - 1;
+
+          return (
+            <View style={isLastItem ? styles.posicaoAtualContainer : styles.rankingItemContainer}>
+              {isLastItem && (
+                <Text style={styles.posicaoAtualLabel}>SUA POSIÇÃO ATUAL:</Text>
+              )}
+              <RankingItem
+                item={{
+                  id: item.idUsuario,
+                  name: item.nome,
+                  score: item.experienciaQuinzenal,
+                  rank: item.posicao,
+                  avatar: require('../../assets/bitbeak-logo.png')
+                }}
+              />
+            </View>
+          );
+        }}
         keyExtractor={item => `${item.idUsuario}-${item.posicao}`}
         contentContainerStyle={styles.listContainer}
       />
@@ -100,6 +105,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 10,
     padding: 5,
+    marginVertical: 10,
     backgroundColor: 'rgba(255, 215, 0, 0.1)',
   },
   posicaoAtualLabel: {

@@ -21,7 +21,7 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       if (fontsLoaded) {
-        // fetchUserData(); // Comentado para evitar chamadas ao back-end
+        fetchUserData(); // Comentado para evitar chamadas ao back-end
         setLoading(false); // Define o estado como carregado
       }
       return () => {
@@ -30,7 +30,6 @@ const HomeScreen = ({ navigation }) => {
     }, [fontsLoaded])
   );
 
-  /*
   const fetchUserData = async () => {
     try {
       // Comentado para evitar chamadas ao back-end
@@ -76,8 +75,7 @@ const HomeScreen = ({ navigation }) => {
       Alert.alert("Erro", "Falha ao carregar os dados do servidor.");
     }
   };
-  */
-
+  
   const handleEnterTrail = (trail) => {
     if (trail && trail.unlocked) {
       navigation.navigate('MapScreen', { trailNumber: trail.id });

@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
@@ -32,9 +32,9 @@ const MatchColumnsScreen = ({ route }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const [turnEndedModalVisible, setTurnEndedModalVisible] = useState(false);
 
   useEffect(() => {
-    console.log('Iniciando tela MatchColumns com pergunta:', question);
     setSelectedLeft(null);
     setSelectedRight(null);
     setPairs([]);
@@ -137,41 +137,43 @@ const MatchColumnsScreen = ({ route }) => {
           throw new Error('Erro desconhecido');
         }
       } else if (response.status === 200) {
-        const data = JSON.parse(responseData);
+        if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
+          // Mostrar modal indicando que o turno foi encerrado
+          setTurnEndedModalVisible(true);
+        } else {
+          const data = JSON.parse(responseData);
 
-        const acertosAntes = correctAnswers;
-        const acertosDepois = data.contadorAcertos;
-        const acertou = acertosDepois > acertosAntes;
-        setIsCorrect(acertou);
+          const acertosAntes = correctAnswers;
+          const acertosDepois = data.contadorAcertos;
+          const acertou = acertosDepois > acertosAntes;
+          setIsCorrect(acertou);
 
-        const updatedHistory = data.questoesRespondidas;
+          const updatedHistory = data.questoesRespondidas;
 
-        // Caso seja uma questão especial, utilize o campo "perguntaEspecial" em vez do "questao"
-        const nextQuestion = data.perguntaEspecial || data.questao;
+          const nextQuestion = data.perguntaEspecial || data.questao;
 
-        setNextScreenParams({
-          question: {
-            idQuestao: nextQuestion.idQuestao,
-            enunciado: nextQuestion.enunciado,
-            tipo: nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao,
-            opcoes: nextQuestion.opcoes,
-            lacunas: nextQuestion.lacunas,
-            codeFill: nextQuestion.codeFill,
-            codigo: nextQuestion.codigo,
-          },
-          currentQuestionIndex: currentQuestionIndex + 1,
-          trailNumber,
-          correctAnswers: acertosDepois,
-          incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
-          questionsHistory: updatedHistory,
-          isChallenge,
-          challengeId,
-          idNivel: route.params.idNivel,
-          // Adicionando perguntaEspecial para o próximo passo caso seja uma questão especial
-          perguntaEspecial: nextQuestion,
-        });
+          setNextScreenParams({
+            question: {
+              idQuestao: nextQuestion.idQuestao,
+              enunciado: nextQuestion.enunciado,
+              tipo: nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao,
+              opcoes: nextQuestion.opcoes,
+              lacunas: nextQuestion.lacunas,
+              codeFill: nextQuestion.codeFill,
+              codigo: nextQuestion.codigo,
+            },
+            currentQuestionIndex: currentQuestionIndex + 1,
+            trailNumber,
+            correctAnswers: acertosDepois,
+            incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+            questionsHistory: updatedHistory,
+            isChallenge,
+            challengeId,
+            idNivel: route.params.idNivel,
+          });
 
-        setShowFeedback(true);
+          setShowFeedback(true);
+        }
       } else {
         console.error('Erro inesperado ao enviar a resposta. Código:', response.status);
         throw new Error(`Erro ao enviar a resposta: ${response.status}`);
@@ -192,14 +194,11 @@ const MatchColumnsScreen = ({ route }) => {
     const { tipo } = nextScreenParams.question;
 
     if (tipo === 4) {
-      // Se for uma questão especial, redirecionar para a tela especial com perguntaEspecial
       navigation.navigate('SpecialQuestionScreen', {
         ...nextScreenParams,
         key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
-        perguntaEspecial: nextScreenParams.question,
       });
     } else {
-      // Navegar para a próxima tela conforme o tipo de questão
       switch (tipo) {
         case 0:
           navigation.navigate('QuizzQuestionScreen', nextScreenParams);
@@ -325,6 +324,30 @@ const MatchColumnsScreen = ({ route }) => {
           navigation.navigate('HomeScreen');
         }}
       />
+      {/* Modal para indicar que o turno foi encerrado */}
+      <Modal
+        visible={turnEndedModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setTurnEndedModalVisible(false)}
+      >
+        <View style={styles.challengeModalContainer}>
+          <View style={styles.challengeModalContent}>
+            <Text style={styles.challengeModalText}>
+              Turno encerrado, agora é a vez do outro jogador.
+            </Text>
+            <TouchableOpacity
+              style={styles.challengeModalButton}
+              onPress={() => {
+                setTurnEndedModalVisible(false);
+                navigation.navigate('ChallengesScreen');
+              }}
+            >
+              <Text style={styles.challengeModalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -410,15 +433,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   rightOption: {
-    width: 165,
-    height: 160,
+    width: 160,
+    height: 70,
     backgroundColor: '#FFD700',
     borderWidth: 1,
     borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    marginVertical: 3,
+    marginVertical: 5,
+    marginHorizontal: 5,
   },
   selectedOption: {
     backgroundColor: '#FFFFFF',
@@ -458,6 +482,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  challengeModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  challengeModalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  challengeModalText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  challengeModalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#006FC2',
+    borderRadius: 10,
+  },
+  challengeModalButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',

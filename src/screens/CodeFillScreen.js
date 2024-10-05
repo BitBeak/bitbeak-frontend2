@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +48,7 @@ const CodeFillScreen = ({ route }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const [turnEndedModalVisible, setTurnEndedModalVisible] = useState(false);
 
   useEffect(() => {
     setCodeInput('');
@@ -103,56 +105,58 @@ const CodeFillScreen = ({ route }) => {
           throw new Error('Erro desconhecido');
         }
       } else if (response.status === 200) {
-        const data = JSON.parse(responseData);
+        if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
+          setTurnEndedModalVisible(true);
+        } else {
+          const data = JSON.parse(responseData);
 
-        const acertosAntes = correctAnswers;
-        const acertosDepois = data.contadorAcertos;
-        const acertou = acertosDepois > acertosAntes;
-        setIsCorrect(acertou);
+          const acertosAntes = correctAnswers;
+          const acertosDepois = data.contadorAcertos;
+          const acertou = acertosDepois > acertosAntes;
+          setIsCorrect(acertou);
 
-        const updatedHistory = data.questoesRespondidas;
+          const updatedHistory = data.questoesRespondidas;
 
-        // Caso seja uma questão especial, utilize o campo "perguntaEspecial" em vez do "questao"
-        const nextQuestion = data.perguntaEspecial || data.questao;
+          const nextQuestion = data.perguntaEspecial || data.questao;
 
-        // Definindo manualmente o tipo de questão se for especial (tipo 4)
-        let tipoQuestao = nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao;
+          let tipoQuestao = nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao;
 
-        if (tipoQuestao === 4) {
-          if (nextQuestion.opcoes && nextQuestion.opcoes.length > 0) {
-            tipoQuestao = 0; // Quizz (Múltipla Escolha)
-          } else if (nextQuestion.lacunas && nextQuestion.lacunas.length > 0) {
-            tipoQuestao = 1; // Match Columns
-          } else if (nextQuestion.solucaoEsperada && nextQuestion.codigo) {
-            tipoQuestao = 2; // Code Question
-          } else if (nextQuestion.codigo && !nextQuestion.solucaoEsperada) {
-            tipoQuestao = 3; // Code Fill
-          } else {
-            console.error('Erro: Tipo de questão especial não pôde ser determinado.');
+          if (tipoQuestao === 4) {
+            if (nextQuestion.opcoes && nextQuestion.opcoes.length > 0) {
+              tipoQuestao = 0; // Quizz (Múltipla Escolha)
+            } else if (nextQuestion.lacunas && nextQuestion.lacunas.length > 0) {
+              tipoQuestao = 1; // Match Columns
+            } else if (nextQuestion.solucaoEsperada && nextQuestion.codigo) {
+              tipoQuestao = 2; // Code Question
+            } else if (nextQuestion.codigo && !nextQuestion.solucaoEsperada) {
+              tipoQuestao = 3; // Code Fill
+            } else {
+              console.error('Erro: Tipo de questão especial não pôde ser determinado.');
+            }
           }
+
+          setNextScreenParams({
+            question: {
+              idQuestao: nextQuestion.idQuestao,
+              enunciado: nextQuestion.enunciado,
+              tipo: tipoQuestao,
+              lacunas: nextQuestion.lacunas,
+              codeFill: nextQuestion.codeFill,
+              codigo: nextQuestion.codigo,
+              opcoes: nextQuestion.opcoes,
+            },
+            currentQuestionIndex: currentQuestionIndex + 1,
+            trailNumber,
+            correctAnswers: acertosDepois,
+            incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
+            questionsHistory: updatedHistory,
+            isChallenge,
+            challengeId,
+            idNivel: isChallenge ? idNivel : selectedLevel,
+          });
+
+          setShowFeedback(true);
         }
-
-        setNextScreenParams({
-          question: {
-            idQuestao: nextQuestion.idQuestao,
-            enunciado: nextQuestion.enunciado,
-            tipo: tipoQuestao,
-            lacunas: nextQuestion.lacunas,
-            codeFill: nextQuestion.codeFill,
-            codigo: nextQuestion.codigo,
-            opcoes: nextQuestion.opcoes,
-          },
-          currentQuestionIndex: currentQuestionIndex + 1,
-          trailNumber,
-          correctAnswers: acertosDepois,
-          incorrectQuestions: acertou ? incorrectQuestions : [...incorrectQuestions, question],
-          questionsHistory: updatedHistory,
-          isChallenge,
-          challengeId,
-          idNivel: isChallenge ? idNivel : selectedLevel,
-        });
-
-        setShowFeedback(true);
       } else {
         throw new Error(`Erro ao enviar a resposta: ${response.status}`);
       }
@@ -176,13 +180,11 @@ const CodeFillScreen = ({ route }) => {
     const { tipo } = nextScreenParams.question;
 
     if (tipo === 4) {
-      // Se for uma questão especial, redirecionar para a tela especial
       navigation.navigate('SpecialQuestionScreen', {
         ...nextScreenParams,
         key: `${nextScreenParams.question.idQuestao}-${Date.now()}`,
       });
     } else {
-      // Redirecionar para a tela correspondente do tipo
       switch (tipo) {
         case 0:
           navigation.navigate('QuizzQuestionScreen', nextScreenParams);
@@ -281,6 +283,30 @@ const CodeFillScreen = ({ route }) => {
             </TouchableOpacity>
           </View>
         )}
+        {/* Modal para indicar que o turno foi encerrado */}
+        <Modal
+          visible={turnEndedModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setTurnEndedModalVisible(false)}
+        >
+          <View style={styles.challengeModalContainer}>
+            <View style={styles.challengeModalContent}>
+              <Text style={styles.challengeModalText}>
+                Turno encerrado, agora é a vez do outro jogador.
+              </Text>
+              <TouchableOpacity
+                style={styles.challengeModalButton}
+                onPress={() => {
+                  setTurnEndedModalVisible(false);
+                  navigation.navigate('ChallengesScreen');
+                }}
+              >
+                <Text style={styles.challengeModalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -413,6 +439,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  challengeModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  challengeModalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  challengeModalText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  challengeModalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#006FC2',
+    borderRadius: 10,
+  },
+  challengeModalButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
