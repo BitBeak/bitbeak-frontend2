@@ -1,37 +1,44 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { Text, FlatList, StyleSheet, View } from 'react-native';
+import React, { useState, useContext, useCallback } from 'react';
+import { Text, FlatList, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import RankingItem from '../components/RankingItem';
 import NavBar from '../components/NavBar.js';
 import { AuthContext } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function RankingScreen({ navigation }) {
   const { userId } = useContext(AuthContext);
   const [topUsuarios, setTopUsuarios] = useState([]);
   const [posicaoAtual, setPosicaoAtual] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRanking = async () => {
-      try {
-        const response = await fetch(`http://192.168.0.16:5159/api/Jogo/RankingQuinzenal/${userId}`);
-        const data = await response.json();
+  const fetchRanking = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://192.168.0.2:5159/api/Jogo/RankingQuinzenal/${userId}`);
+      const data = await response.json();
 
-        setTopUsuarios(data.topUsuarios || []);
-        setPosicaoAtual(data.posicaoAtual || null);
-      } catch (error) {
-        console.error('Erro ao buscar os dados do ranking:', error.message);
-      }
-    };
+      setTopUsuarios(data.topUsuarios || []);
+      setPosicaoAtual(data.posicaoAtual || null);
+    } catch (error) {
+      console.error('Erro ao buscar os dados do ranking:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchRanking();
-  }, [userId]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchRanking();
+    }, [userId])
+  );
 
   const getRankingData = () => {
     if (!posicaoAtual) return topUsuarios.slice(0, 5);
 
     const filteredTopUsuarios = topUsuarios.filter(user => user && user.idUsuario);
-    const top5 = filteredTopUsuarios.slice(0, 5);
+    const top5 = filteredTopUsuarios.slice(0, 4);
 
     return [...top5, posicaoAtual];
   };
@@ -41,32 +48,39 @@ export default function RankingScreen({ navigation }) {
       <Header />
       <Text style={styles.header}>RANKING</Text>
       <Text style={styles.subHeader}>Atualizado quinzenalmente! Quanto melhor colocado, mais penas você ganha!</Text>
-      <FlatList
-        data={getRankingData()}
-        renderItem={({ item, index }) => {
-          const rankingData = getRankingData();
-          const isLastItem = index === rankingData.length - 1;
 
-          return (
-            <View style={isLastItem ? styles.posicaoAtualContainer : styles.rankingItemContainer}>
-              {isLastItem && (
-                <Text style={styles.posicaoAtualLabel}>SUA POSIÇÃO ATUAL:</Text>
-              )}
-              <RankingItem
-                item={{
-                  id: item.idUsuario,
-                  name: item.nome,
-                  score: item.experienciaQuinzenal,
-                  rank: item.posicao,
-                  avatar: require('../../assets/bitbeak-logo.png')
-                }}
-              />
-            </View>
-          );
-        }}
-        keyExtractor={item => `${item.idUsuario}-${item.posicao}`}
-        contentContainerStyle={styles.listContainer}
-      />
+      {loading ? (
+        <View style={styles.loadingWrapper}>
+          <ActivityIndicator size="large" color="#FFD700" />
+        </View>
+      ) : (
+        <FlatList
+          data={getRankingData()}
+          renderItem={({ item, index }) => {
+            const rankingData = getRankingData();
+            const isLastItem = index === rankingData.length - 1;
+
+            return (
+              <View style={isLastItem ? styles.posicaoAtualContainer : styles.rankingItemContainer}>
+                {isLastItem && (
+                  <Text style={styles.posicaoAtualLabel}>SUA POSIÇÃO ATUAL:</Text>
+                )}
+                <RankingItem
+                  item={{
+                    id: item.idUsuario,
+                    name: item.nome,
+                    score: item.experienciaQuinzenal,
+                    rank: item.posicao,
+                    avatar: require('../../assets/bitbeak-logo.png')
+                  }}
+                />
+              </View>
+            );
+          }}
+          keyExtractor={item => `${item.idUsuario}-${item.posicao}`}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
       <NavBar navigation={navigation} currentScreen="RankingScreen" />
       <View style={styles.spacer} />
     </LinearGradient>
@@ -78,6 +92,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#002B80',
     paddingTop: 12,
+  },
+  loadingWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContainer: {
     alignItems: 'center',
@@ -92,7 +111,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 30,
   },
   rankingItemContainer: {
     alignItems: 'center',

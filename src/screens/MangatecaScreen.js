@@ -15,7 +15,7 @@ const MangatecaScreen = ({ route }) => {
   useEffect(() => {
     const fetchTrailData = async () => {
       try {
-        const url = `http://192.168.0.16:5159/api/Trilhas/ListarDadosTrilha/${trailNumber}`;
+        const url = `http://192.168.0.2:5159/api/Trilhas/ListarDadosTrilha/${trailNumber}`;
         console.log(`Requisição enviada para: ${url}`);
         
         const response = await fetch(url);

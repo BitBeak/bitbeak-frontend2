@@ -24,7 +24,7 @@ const ChallengesScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const response = await fetch(`http://192.168.0.16:5159/api/Usuarios/ListarDadosUsuario/${userId}`);
+        const response = await fetch(`http://192.168.0.2:5159/api/Usuarios/ListarDadosUsuario/${userId}`);
         if (!response.ok) {
           throw new Error(`Erro ao buscar dados do usuário: ${response.status}`);
         }
@@ -43,13 +43,13 @@ const ChallengesScreen = ({ navigation }) => {
   const fetchChallenges = useCallback(async () => {
     setLoading(true);
     try {
-      const ongoingResponse = await fetch(`http://192.168.0.16:5159/api/Desafio/ListarDesafiosAbertos/${userId}`);
+      const ongoingResponse = await fetch(`http://192.168.0.2:5159/api/Desafio/ListarDesafiosAbertos/${userId}`);
       let ongoingChallenges = [];
       if (ongoingResponse.ok) {
         ongoingChallenges = await ongoingResponse.json();
       }
 
-      const pendingResponse = await fetch(`http://192.168.0.16:5159/api/Desafio/ListarDesafiosPendentes/${userId}`);
+      const pendingResponse = await fetch(`http://192.168.0.2:5159/api/Desafio/ListarDesafiosPendentes/${userId}`);
       let pendingData = [];
       if (pendingResponse.ok) {
         pendingData = await pendingResponse.json();
@@ -59,11 +59,10 @@ const ChallengesScreen = ({ navigation }) => {
         throw new Error(`Erro ao buscar desafios pendentes: ${pendingResponse.status}`);
       }
 
-      // Verificação adicional para definir se é a vez do usuário
       const updatedChallenges = await Promise.all(
         ongoingChallenges.map(async (challenge) => {
           try {
-            const response = await fetch(`http://192.168.0.16:5159/api/Desafio/VerificarVez/${challenge.idDesafio}/${userId}`);
+            const response = await fetch(`http://192.168.0.2:5159/api/Desafio/VerificarVez/${challenge.idDesafio}/${userId}`);
             if (response.ok) {
               const data = await response.json();
               const yourTurn = data.mensagem.includes('sua vez de jogar');
@@ -102,7 +101,7 @@ const ChallengesScreen = ({ navigation }) => {
 
   const handleEnterChallenge = async (challengeId) => {
     try {
-      const response = await fetch(`http://192.168.0.16:5159/api/Desafio/EntrarNoDesafio/${challengeId}/${userId}`);
+      const response = await fetch(`http://192.168.0.2:5159/api/Desafio/EntrarNoDesafio/${challengeId}/${userId}`);
       
       if (response.status === 400) {
         const responseData = await response.text();
@@ -117,7 +116,6 @@ const ChallengesScreen = ({ navigation }) => {
         const data = await response.json();
         const { questao } = data;
   
-        // Navegar para a QuestionScreen com os dados da questão
         navigation.navigate('QuestionScreen', {
           trailNumber: data.idDesafio,
           challengeData: {
@@ -154,7 +152,7 @@ const ChallengesScreen = ({ navigation }) => {
   if (!fontsLoaded || loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color="#006FC2" />
         <Text style={styles.loadingText}>Carregando...</Text>
       </View>
     );
@@ -168,7 +166,6 @@ const ChallengesScreen = ({ navigation }) => {
           <Text style={styles.titleHeader}>DESAFIOS</Text>
         </View>
         <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.scrollView}>
-          {/* Botão "Desafie um amigo!" antes de todos os desafios */}
           <View style={styles.newGameContainer}>
             <View style={styles.iconContainer}>
               <Icon name="help-circle-outline" size={40} color="#FFD700" />
@@ -181,7 +178,6 @@ const ChallengesScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Lista de desafios */}
           {challenges.length > 0 &&
             challenges.map((item, index) => {
               const isPending = pendingChallenges.some((pending) => pending.idDesafio === item.idDesafio);
@@ -245,7 +241,6 @@ const ChallengesScreen = ({ navigation }) => {
         <NavBar navigation={navigation} currentScreen="ChallengesScreen" />
         <View style={styles.spacer} />
 
-        {/* Modal de Sucesso/Erro Melhorado */}
         <Modal
           visible={modalVisible}
           transparent={true}
@@ -416,14 +411,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: '#006FC2',
     marginTop: 10,
   },
   sticker: {
     position: 'absolute',
-    top: -5, // Mover um pouco mais para cima
+    top: -5,
     right: 5,
-    backgroundColor: '#ff7700', // Cor laranja
+    backgroundColor: '#ff7700',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,

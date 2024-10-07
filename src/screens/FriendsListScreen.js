@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Modal, Alert, Clipboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const FriendsListScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [trilhaModalVisible, setTrilhaModalVisible] = useState(false);
   const [friendCode, setFriendCode] = useState('');
+  const [userCode, setUserCode] = useState('');
   const [isAddingFriend, setIsAddingFriend] = useState(false);
   const [removingFriendId, setRemovingFriendId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
@@ -23,12 +24,28 @@ const FriendsListScreen = ({ navigation }) => {
     { id: 5, title: 'Trilha V: Algoritmos Avançados', levelsCompleted: 0, totalLevels: 5 },
   ]);
 
-  // Função para buscar amigos do usuário
+  const fetchUserCode = async () => {
+    try {
+      console.log('Buscando código de amizade do usuário...');
+      const response = await fetch(`http://192.168.0.2:5159/api/Usuarios/ListarDadosUsuario/${userId}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Dados do usuário recebidos:', data);
+        setUserCode(data.codigoDeAmizade);
+      } else {
+        console.error('Erro ao buscar dados do usuário. Código da resposta:', response.status);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+    }
+  };
+
   const fetchFriends = async () => {
     setLoading(true);
     try {
       console.log('Buscando lista de amigos...');
-      const response = await fetch(`http://192.168.0.16:5159/api/Amizade/ListarAmigos/${userId}`);
+      const response = await fetch(`http://192.168.0.2:5159/api/Amizade/ListarAmigos/${userId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -46,6 +63,7 @@ const FriendsListScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
+    fetchUserCode();
     fetchFriends();
   }, [userId]);
 
@@ -59,7 +77,7 @@ const FriendsListScreen = ({ navigation }) => {
 
     try {
       console.log('Adicionando amigo com código:', friendCode);
-      const response = await fetch(`http://192.168.0.16:5159/api/Amizade/AdicionarAmigo?intIdUsuario=${userId}&strCodigoAmizadeAmigo=${friendCode}`, {
+      const response = await fetch(`http://192.168.0.2:5159/api/Amizade/AdicionarAmigo?intIdUsuario=${userId}&strCodigoAmizadeAmigo=${friendCode}`, {
         method: 'POST',
       });
 
@@ -83,7 +101,7 @@ const FriendsListScreen = ({ navigation }) => {
 
     try {
       console.log(`Removendo amigo com ID: ${friendId}`);
-      const response = await fetch(`http://192.168.0.16:5159/api/Amizade/RemoverAmizade/${userId}/${friendId}`, {
+      const response = await fetch(`http://192.168.0.2:5159/api/Amizade/RemoverAmizade/${userId}/${friendId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +129,7 @@ const FriendsListScreen = ({ navigation }) => {
 
   const handleSelectTrilha = async (trilha) => {
     setTrilhaModalVisible(false);
-    setLoading(true); // Exibir carregamento enquanto o desafio é iniciado
+    setLoading(true);
   
     const requestBody = {
       idDesafiante: userId,
@@ -122,7 +140,7 @@ const FriendsListScreen = ({ navigation }) => {
     console.log('Iniciando desafio com os dados:', requestBody);
   
     try {
-      const response = await fetch('http://192.168.0.16:5159/api/Desafio/IniciarDesafio', {
+      const response = await fetch('http://192.168.0.2:5159/api/Desafio/IniciarDesafio', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -134,17 +152,14 @@ const FriendsListScreen = ({ navigation }) => {
       if (response.ok) {
         const data = await response.json();
         console.log('Desafio iniciado com sucesso:', data);
-
-        // Adicionando log específico para o idNivel
         console.log('idNivel recebido da API:', data.questao.idNivel);
 
-        // Redirecionar para a tela de questão
         navigation.navigate('QuestionScreen', {
           challengeData: data,
           trailNumber: trilha.id,
           isChallenge: true,
-          challengeId: data.idDesafio, // Pegando o ID do desafio
-          idNivel: data.questao.idNivel // Adicionando o `idNivel` da resposta
+          challengeId: data.idDesafio,
+          idNivel: data.questao.idNivel
         });
       } else if (response.status === 400) {
         const responseBody = await response.text();
@@ -164,7 +179,7 @@ const FriendsListScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Erro ao iniciar o desafio:', error);
     } finally {
-      setLoading(false); // Remover carregamento
+      setLoading(false);
     }
   };
 
@@ -176,6 +191,9 @@ const FriendsListScreen = ({ navigation }) => {
     <LinearGradient colors={['#012768', '#006FC2']} style={styles.gradientBackground}>
       <View style={styles.container}>
         <Text style={styles.header}>ESCOLHA UM AMIGO PARA DESAFIAR</Text>
+        <View style={styles.userCodeContainer}>
+        <Text style={styles.userCodeText}>Seu Código de Amizade: {userCode}</Text>
+        </View>
 
         {friends.length === 0 ? (
           <View style={styles.noFriendsContainer}>
@@ -221,7 +239,6 @@ const FriendsListScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Modal de Seleção de Trilha */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -250,7 +267,6 @@ const FriendsListScreen = ({ navigation }) => {
           </View>
         </Modal>
 
-        {/* Modal de Adicionar Amigo */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -290,7 +306,6 @@ const FriendsListScreen = ({ navigation }) => {
   );
 };
 
-// Estilos
 const styles = StyleSheet.create({
   gradientBackground: {
     flex: 1,
@@ -488,6 +503,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     fontSize: 16,
     color: '#0A2A53',
+  },
+  userCodeContainer: {
+    backgroundColor: '#012768',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    width: '80%',
+    alignItems: 'center',
+  },
+  userCodeText: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+    color: '#FFD700',
+    textAlign: 'center',
   },
 });
 

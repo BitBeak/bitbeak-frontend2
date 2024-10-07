@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { ProgressBar } from 'react-native-paper';
@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font'; 
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/NavBar.js';
+import { useFocusEffect } from '@react-navigation/native';
 
 const MissionScreen = ({ navigation }) => {
   const { xp, feathers, level, correctAnswers, trails, userId } = useContext(AuthContext); 
@@ -21,20 +22,23 @@ const MissionScreen = ({ navigation }) => {
   }, [xp]);
 
   const fetchMissions = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`http://192.168.0.16:5159/api/Missoes/ObterMissoesAtivasUsuario/${userId}`);
+      const response = await fetch(`http://192.168.0.2:5159/api/Missoes/ObterMissoesAtivasUsuario/${userId}`);
       const data = await response.json();
       setMissions(data); 
-      setLoading(false); 
     } catch (error) {
       console.error('Erro ao buscar as missões:', error);
+    } finally {
       setLoading(false); 
     }
   };
 
-  useEffect(() => {
-    fetchMissions();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchMissions();
+    }, [])
+  );
 
   const getMissionProgress = (mission) => {
     return mission.progressoAtual || 0;
@@ -42,7 +46,7 @@ const MissionScreen = ({ navigation }) => {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.loadingWrapper}>
         <ActivityIndicator size="large" color="#FFD700" />
       </View>
     );
@@ -60,17 +64,17 @@ const MissionScreen = ({ navigation }) => {
           <ExpDetails feathers={feathers} />
         </View>
 
-        {/* Título Principal e Badge */}
         <View style={styles.titleContainer}>
           <Text style={styles.mainTitle}>
             MISSÕES<Text style={styles.badge}> ({missions.length})</Text>
           </Text>
         </View>
 
-        {/* Missões */}
         <View style={styles.missionsContainer}>
           {loading ? (
-            <ActivityIndicator size="large" color="#FFD700" /> 
+            <View style={styles.loadingWrapper}>
+              <ActivityIndicator size="large" color="#FFD700" />
+            </View>
           ) : (
             <FlatList
               data={missions} 
@@ -80,7 +84,6 @@ const MissionScreen = ({ navigation }) => {
                 return (
                   <View style={styles.missionCard}>
                     <View style={styles.missionHeader}>
-                      {/* Dividindo o título em duas partes para estilos diferentes */}
                       <Text style={styles.missionTitle}>
                         <Text style={styles.missionPrefix}>{`Missão ${index + 1}: `}</Text>
                         {item.descricao}
@@ -102,16 +105,12 @@ const MissionScreen = ({ navigation }) => {
             />
           )}
         </View>
-
-        {/* NavBar */}
         <Navbar navigation={navigation} currentScreen="MissionScreen" style={styles.navbar} />
         <View style={styles.spacer} />
       </View>
     </LinearGradient>
   );
 };
-
-// Funções auxiliares e componentes
 
 function calculateExpProgress(xp) {
   return xp / 100;
@@ -152,6 +151,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  loadingWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     marginTop: 50,
@@ -238,11 +242,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: 'transparent',
+    marginTop: 20,
   },
   missionCard: {
     backgroundColor: '#74A7CC', 
     padding: 15,
-    borderRadius: 15, // Mais arredondado
+    borderRadius: 15,
     marginBottom: 10,
   },
   missionHeader: {
@@ -250,11 +255,11 @@ const styles = StyleSheet.create({
   },
   missionTitle: {
     fontSize: 18,
-    color: '#012768', // Cor padrão para a descrição da missão
+    color: '#012768',
     fontFamily: 'Poppins-Bold',
   },
   missionPrefix: {
-    color: '#FFD700', // Cor laranja para o prefixo "Missão X:"
+    color: '#FFD700',
   },
   progressWrapper: {
     position: 'relative',

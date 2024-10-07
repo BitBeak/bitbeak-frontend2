@@ -155,6 +155,107 @@ const mangaData = {
     ],
     vertical: require('../../assets/mangas/Trilha III/N5/N5T3.jpg'),
   },
+  '4-1': {
+    horizontal: [
+      require('../../assets/mangas/Trilha IV/N1/Cena1_N1T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N1/Cena2_N1T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N1/Cena3_N1T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N1/Cena4_N1T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N1/Cena5_N1T4.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha IV/N1/N1T4.jpg'),
+  },
+  '4-2': {
+    horizontal: [
+      require('../../assets/mangas/Trilha IV/N2/Cena1_N2T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N2/Cena2_N2T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N2/Cena3_N2T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N2/Cena4_N2T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N2/Cena5_N2T4.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha IV/N2/N2T4.jpg'),
+  },
+  '4-3': {
+    horizontal: [
+      require('../../assets/mangas/Trilha IV/N3/Cena1_N3T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N3/Cena2_N3T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N3/Cena3_N3T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N3/Cena4_N3T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N3/Cena5_N3T4.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha IV/N3/N3T4.jpg'),
+  },
+  '4-4': {
+    horizontal: [
+      require('../../assets/mangas/Trilha IV/N4/Cena1_N4T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N4/Cena2_N4T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N4/Cena3_N4T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N4/Cena4_N4T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N4/Cena5_N4T4.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha IV/N4/N4T4.jpg'),
+  },
+  '4-5': {
+    horizontal: [
+      require('../../assets/mangas/Trilha IV/N5/Cena1_N5T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N5/Cena2_N5T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N5/Cena3_N5T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N5/Cena4_N5T4.jpg'),
+      require('../../assets/mangas/Trilha IV/N5/Cena5_N5T4.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha IV/N5/N5T4.jpg'),
+  },
+
+  '5-1': {
+    horizontal: [
+      require('../../assets/mangas/Trilha V/N1/Cena1_N1T5.jpg'),
+      require('../../assets/mangas/Trilha V/N1/Cena2_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N1/Cena3_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N1/Cena4_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N1/Cena5_N2T5.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha V/N1/N1T5.jpg'),
+  },
+  '5-2': {
+    horizontal: [
+      require('../../assets/mangas/Trilha V/N2/Cena1_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N2/Cena2_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N2/Cena3_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N2/Cena4_N2T5.jpg'),
+      require('../../assets/mangas/Trilha V/N2/Cena5_N2T5.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha V/N2/N2T5.jpg'),
+  },
+  '5-3': {
+    horizontal: [
+      require('../../assets/mangas/Trilha V/N3/Cena1_N3T5.jpg'),
+      require('../../assets/mangas/Trilha V/N3/Cena2_N3T5.jpg'),
+      require('../../assets/mangas/Trilha V/N3/Cena3_N3T5.jpg'),
+      require('../../assets/mangas/Trilha V/N3/Cena4_N3T5.jpg'),
+      require('../../assets/mangas/Trilha V/N3/Cena5_N3T5.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha V/N3/N3T5.jpg'),
+  },
+  '5-4': {
+    horizontal: [
+      require('../../assets/mangas/Trilha V/N4/Cena1_N4T5.jpg'),
+      require('../../assets/mangas/Trilha V/N4/Cena2_N4T5.jpg'),
+      require('../../assets/mangas/Trilha V/N4/Cena3_N4T5.jpg'),
+      require('../../assets/mangas/Trilha V/N4/Cena4_N4T5.jpg'),
+      require('../../assets/mangas/Trilha V/N4/Cena5_N4T5.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha V/N4/N4T5.jpg'),
+  },
+  '5-5': {
+    horizontal: [
+      require('../../assets/mangas/Trilha V/N5/Cena1_N5T5.jpg'),
+      require('../../assets/mangas/Trilha V/N5/Cena2_N5T5.jpg'),
+      require('../../assets/mangas/Trilha V/N5/Cena3_N5T5.jpg'),
+      require('../../assets/mangas/Trilha V/N5/Cena4_N5T5.jpg'),
+      require('../../assets/mangas/Trilha V/N5/Cena5_N5T5.jpg'),
+    ],
+    vertical: require('../../assets/mangas/Trilha V/N5/N5T5.jpg'),
+  },
 };
 
 const MangaScreen = ({ route }) => {

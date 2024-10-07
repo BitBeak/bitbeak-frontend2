@@ -56,8 +56,8 @@ const CodeQuestionScreen = ({ route }) => {
     setIsInputDisabled(true);
 
     const apiEndpoint = isChallenge
-      ? 'http://192.168.0.16:5159/api/Desafio/ResponderQuestaoDesafio'
-      : 'http://192.168.0.16:5159/api/Jogo/ResponderQuestao';
+      ? 'http://192.168.0.2:5159/api/Desafio/ResponderQuestaoDesafio'
+      : 'http://192.168.0.2:5159/api/Jogo/ResponderQuestao';
 
     const resposta = {
       idDesafio: challengeId,
