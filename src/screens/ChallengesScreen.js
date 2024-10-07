@@ -103,6 +103,7 @@ const ChallengesScreen = ({ navigation }) => {
   const handleEnterChallenge = async (challengeId) => {
     try {
       const response = await fetch(`http://192.168.0.16:5159/api/Desafio/EntrarNoDesafio/${challengeId}/${userId}`);
+      
       if (response.status === 400) {
         const responseData = await response.text();
         if (responseData === "Não é a sua vez de jogar.") {
@@ -115,23 +116,22 @@ const ChallengesScreen = ({ navigation }) => {
       } else if (response.status === 200) {
         const data = await response.json();
         const { questao } = data;
-
-        // Navegar para a tela apropriada com os dados da questão
-        navigation.navigate('QuizzQuestionScreen', {
-          question: {
-            idQuestao: questao.idQuestao,
-            enunciado: questao.enunciado,
-            tipo: questao.tipo,
-            opcoes: questao.opcoes,
-            lacunas: questao.lacunas,
-            codeFill: questao.codeFill,
-            codigo: questao.codigo,
-          },
-          currentQuestionIndex: 0,
+  
+        // Navegar para a QuestionScreen com os dados da questão
+        navigation.navigate('QuestionScreen', {
           trailNumber: data.idDesafio,
-          correctAnswers: 0,
-          incorrectQuestions: [],
-          questionsHistory: [],
+          challengeData: {
+            questao: {
+              idQuestao: questao.idQuestao,
+              enunciado: questao.enunciado,
+              tipo: questao.tipo,
+              opcoes: questao.opcoes,
+              lacunas: questao.lacunas,
+              codeFill: questao.codeFill,
+              codigo: questao.codigo,
+              idNivel: questao.idNivel,
+            },
+          },
           isChallenge: true,
           challengeId: data.idDesafio,
           idNivel: questao.idNivel,
@@ -211,7 +211,7 @@ const ChallengesScreen = ({ navigation }) => {
                   <View style={styles.iconContainer}>
                     <Icon name="account-circle" size={40} color="#FFF" />
                   </View>
-                  {true && (
+                  {item.yourTurn && (
                     <View style={styles.sticker}>
                       <Text style={styles.stickerText}>SUA VEZ</Text>
                     </View>

@@ -107,6 +107,34 @@ const CodeFillScreen = ({ route }) => {
       } else if (response.status === 200) {
         if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
           setTurnEndedModalVisible(true);
+        } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
+          Alert.alert(
+            'Insígnia Conquistada!',
+            'Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } else if (responseData.includes('Jogo finalizado! O jogador ganhou todas as insígnias.')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Parabéns, você venceu!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
         } else {
           const data = JSON.parse(responseData);
 

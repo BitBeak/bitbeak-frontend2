@@ -140,6 +140,34 @@ const MatchColumnsScreen = ({ route }) => {
         if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
           // Mostrar modal indicando que o turno foi encerrado
           setTurnEndedModalVisible(true);
+        } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
+          Alert.alert(
+            'Insígnia Conquistada!',
+            'Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } else if (responseData.includes('Jogo finalizado! O jogador ganhou todas as insígnias.')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Parabéns, você venceu!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
         } else {
           const data = JSON.parse(responseData);
 
@@ -152,11 +180,28 @@ const MatchColumnsScreen = ({ route }) => {
 
           const nextQuestion = data.perguntaEspecial || data.questao;
 
+          if (nextQuestion && nextQuestion.idQuestao) {
+            let tipoQuestao = nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao;
+
+            if (tipoQuestao === 4) {
+              if (nextQuestion.opcoes && nextQuestion.opcoes.length > 0) {
+                tipoQuestao = 0; // Quizz (Múltipla Escolha)
+              } else if (nextQuestion.lacunas && nextQuestion.lacunas.length > 0) {
+                tipoQuestao = 1; // Match Columns
+              } else if (nextQuestion.solucaoEsperada && nextQuestion.codigo) {
+                tipoQuestao = 2; // Code Question
+              } else if (nextQuestion.codigo && !nextQuestion.solucaoEsperada) {
+                tipoQuestao = 3; // Code Fill
+              } else {
+                console.error('Erro: Tipo de questão especial não pôde ser determinado.');
+              }
+            }
+
           setNextScreenParams({
             question: {
               idQuestao: nextQuestion.idQuestao,
               enunciado: nextQuestion.enunciado,
-              tipo: nextQuestion.tipo !== undefined ? nextQuestion.tipo : nextQuestion.tipoQuestao,
+              tipo: tipoQuestao,
               opcoes: nextQuestion.opcoes,
               lacunas: nextQuestion.lacunas,
               codeFill: nextQuestion.codeFill,
@@ -174,6 +219,7 @@ const MatchColumnsScreen = ({ route }) => {
 
           setShowFeedback(true);
         }
+      }
       } else {
         console.error('Erro inesperado ao enviar a resposta. Código:', response.status);
         throw new Error(`Erro ao enviar a resposta: ${response.status}`);

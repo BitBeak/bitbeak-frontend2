@@ -28,6 +28,7 @@ const CodeQuestionScreen = ({ route }) => {
     questionsHistory = [],
     isChallenge = false,
     challengeId = null,
+    idNivel = null,
   } = route.params;
 
   const navigation = useNavigation();
@@ -61,7 +62,7 @@ const CodeQuestionScreen = ({ route }) => {
     const resposta = {
       idDesafio: challengeId,
       idTrilha: trailNumber,
-      idNivelTrilha: selectedLevel,
+      idNivelTrilha: isChallenge ? idNivel : selectedLevel,
       idUsuario: userId,
       idQuestaoAleatoria: question.idQuestao,
       respostaUsuario: codeInput,
@@ -96,7 +97,35 @@ const CodeQuestionScreen = ({ route }) => {
         }
       } else if (response.status === 200) {
         if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
-          setTurnEndedModalVisible(true);
+          setTurnEndedModalVisible(true); 
+        } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
+          Alert.alert(
+            'Insígnia Conquistada!',
+            'Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } else if (responseData.includes('Jogo finalizado! O jogador ganhou todas as insígnias.')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Parabéns, você venceu!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
         } else {
           const data = JSON.parse(responseData);
 
@@ -140,6 +169,7 @@ const CodeQuestionScreen = ({ route }) => {
             questionsHistory: updatedHistory,
             isChallenge,
             challengeId,
+            idNivel: isChallenge ? idNivel : selectedLevel,
           });
 
           setShowFeedback(true);

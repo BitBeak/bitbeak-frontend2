@@ -35,7 +35,6 @@ const FriendsListScreen = ({ navigation }) => {
         console.log('Lista de amigos recebida:', data);
         setFriends(data);
       } else {
-        console.error('Falha ao buscar amigos. Código da resposta:', response.status);
         setFriends([]);
       }
     } catch (error) {

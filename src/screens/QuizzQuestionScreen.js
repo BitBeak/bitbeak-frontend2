@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Modal, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext'; 
@@ -87,6 +87,20 @@ const QuizzQuestionScreen = ({ route }) => {
         } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
           // Mostrar modal e redirecionar para ChallengeScreen
           setChallengeModalVisible(true);
+        } else if (responseData.includes('Jogo finalizado! O jogador ganhou todas as insígnias.')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Parabéns, você venceu!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
         } else {
           const data = JSON.parse(responseData);
           const acertosDepois = data.contadorAcertos;

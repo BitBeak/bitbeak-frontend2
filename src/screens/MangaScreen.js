@@ -280,23 +280,23 @@ const MangaScreen = ({ route }) => {
   const renderLinks = () => (
     <Animated.View style={[styles.linksContainer, { height: linksHeight }]}>
       <Text style={styles.linksHeader}>Explore mais sobre este conteúdo:</Text>
-      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://example.com')}>
+      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://www.alura.com.br/artigos/javascript?srsltid=AfmBOoqqganj3znbQXRpofTxbSQ6MrVlgLR8KGYY3f_yOH81B2E2iWJb')}>
         <View style={styles.iconContainer}>
           <MaterialIcons name="library-books" size={24} color="#fff" />
         </View>
         <Text style={styles.linkText}>Leitura Complementar</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://example.com')}>
+      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://www.youtube.com/playlist?list=PLHz_AreHm4dlsK3Nr9GVvXCbpQyHQl1o1')}>
         <View style={styles.iconContainer}>
           <MaterialIcons name="play-circle-filled" size={24} color="#fff" />
         </View>
         <Text style={styles.linkText}>Vídeos Relacionados</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://example.com')}>
+      <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://developer.mozilla.org/pt-BR/docs/Web/JavaScript')}>
         <View style={styles.iconContainer}>
           <MaterialIcons name="description" size={24} color="#fff" />
         </View>
-        <Text style={styles.linkText}>Resumos e Dicas</Text>
+        <Text style={styles.linkText}>Documentação do Javascript</Text>
       </TouchableOpacity>
     </Animated.View>
   );
