@@ -21,27 +21,25 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       if (fontsLoaded) {
-        fetchUserData(); // Comentado para evitar chamadas ao back-end
-        setLoading(false); // Define o estado como carregado
-      }
-      return () => {
         setLoading(true);
-      };
+        fetchUserData().then(() => {
+          setLoading(false);
+        });
+      }
     }, [fontsLoaded])
   );
 
   const fetchUserData = async () => {
     try {
-      // Comentado para evitar chamadas ao back-end
       const progressResponse = await fetch(`http://192.168.0.16:5159/api/Usuarios/ObterProgressoUsuario/${userId}`);
       const progressData = await progressResponse.json();
-      
+
       setUserData({
         newLevel: progressData.nivelAtual,
         newXp: (progressData.experienciaUsuario / progressData.experienciaNecessaria) * 100,
         newFeathers: progressData.penas,
       });
-      
+
       await Promise.all(
         trails.map(async (trail) => {
           try {
@@ -68,14 +66,12 @@ const HomeScreen = ({ navigation }) => {
           }
         })
       );
-
-      setLoading(false);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
       Alert.alert("Erro", "Falha ao carregar os dados do servidor.");
     }
   };
-  
+
   const handleEnterTrail = (trail) => {
     if (trail && trail.unlocked) {
       navigation.navigate('MapScreen', { trailNumber: trail.id });
@@ -128,20 +124,22 @@ const HomeScreen = ({ navigation }) => {
             <View key={trail.id} style={styles.trailContainer}>
               <Text style={styles.trailTitle}>{trail.title}</Text>
               <Text style={styles.trailLevel}>{trail.levelsCompleted} / {trail.totalLevels} NÍVEIS</Text>
-              <TouchableOpacity
-                style={[styles.trailButton, styles.enterTrailButton]}
-                onPress={() => handleEnterTrail(trail)}
-                disabled={!trail.unlocked}
-              >
-                <Text style={styles.trailButtonText}>ENTRAR NA TRILHA</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.trailButton, styles.studyGuideButton]}
-                onPress={() => handleStudyGuide(trail)}
-                disabled={!trail.unlocked}
-              >
-                <Text style={styles.trailButtonText}>MANGÁTECA</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.trailButton, styles.enterTrailButton]}
+                  onPress={() => handleEnterTrail(trail)}
+                  disabled={!trail.unlocked}
+                >
+                  <Text style={styles.trailButtonText}>ENTRAR NA TRILHA</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.trailButton, styles.studyGuideButton]}
+                  onPress={() => handleStudyGuide(trail)}
+                  disabled={!trail.unlocked}
+                >
+                  <Text style={styles.trailButtonText}>MANGÁTECA</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))}
         </ScrollView>
@@ -187,7 +185,6 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 0,
   },
   trailContainer: {
     backgroundColor: '#74a7cc',
@@ -220,9 +217,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 36,
-    width: 90,
-    height: 36,
     textAlign: 'center',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    alignItems: 'center',
+    width: '100%',
   },
   trailButton: {
     backgroundColor: '#328BCD',
@@ -240,19 +241,12 @@ const styles = StyleSheet.create({
     borderColor: '#74a7cc',
     borderWidth: 2,
   },
-  enterTrailButton: {
-    marginBottom: 10,
-  },
-  studyGuideButton: {
-    marginBottom: 20,
-  },
   trailButtonText: {
     color: '#FFFFFF',
     fontFamily: 'Poppins-Bold',
     fontSize: 24,
     fontWeight: '700',
     lineHeight: 36,
-    letterSpacing: -0.17,
     textAlign: 'center',
   },
   pageIndicator: {

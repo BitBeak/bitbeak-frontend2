@@ -64,8 +64,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   icon: {
-    width: 90,
-    height: 100,
     marginRight: 5
   },
   expBarWrapper: {

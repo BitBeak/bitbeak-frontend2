@@ -54,10 +54,9 @@ export const AuthProvider = ({ children }) => {
     setTrails((prevTrails) => {
       return prevTrails.map((trail) => {
         if (trail.id === trailId) {
-          const updatedLevelsCompleted = Math.max(trail.levelsCompleted, levelCompleted);
           return {
             ...trail,
-            levelsCompleted: updatedLevelsCompleted,
+            levelsCompleted: levelCompleted,
             unlocked: true,
           };
         }
