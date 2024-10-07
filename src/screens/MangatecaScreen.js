@@ -13,17 +13,14 @@ const MangatecaScreen = ({ route }) => {
   const fromMangateca = true;
 
   useEffect(() => {
-    // Função para buscar os dados da trilha a partir da API usando `fetch`
     const fetchTrailData = async () => {
       try {
         const url = `http://192.168.0.16:5159/api/Trilhas/ListarDadosTrilha/${trailNumber}`;
         console.log(`Requisição enviada para: ${url}`);
         
-        // Fazendo a requisição para obter os dados da trilha
         const response = await fetch(url);
         console.log(`Resposta bruta:`, response);
 
-        // Verifica se a resposta foi bem-sucedida
         if (!response.ok) {
           throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
         }
@@ -42,7 +39,6 @@ const MangatecaScreen = ({ route }) => {
     fetchTrailData();
   }, [trailNumber]);
 
-  // Função para navegar para MangaScreen passando o nível selecionado
   const handleLevelSelection = (levelNumber) => {
     console.log(`Navegando para MangaScreen com trailNumber: ${trailNumber}, levelNumber: ${levelNumber}`);
     navigation.navigate('MangaScreen', { trailNumber, levelNumber, fromMangateca });
@@ -52,7 +48,7 @@ const MangatecaScreen = ({ route }) => {
     return (
       <SafeAreaProvider>
         <LinearGradient colors={['#012768', '#006FC2']} style={styles.gradientBackground}>
-          <View style={styles.container}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#FFFFFF" />
           </View>
         </LinearGradient>
@@ -64,7 +60,6 @@ const MangatecaScreen = ({ route }) => {
     <SafeAreaProvider>
       <LinearGradient colors={['#012768', '#006FC2']} style={styles.gradientBackground}>
         <View style={styles.container}>
-          {/* Cabeçalho Simples */}
           <View style={styles.headerContainer}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Icon name="arrow-left" size={28} color="#FFFFFF" />
@@ -76,8 +71,6 @@ const MangatecaScreen = ({ route }) => {
           <Text style={styles.subHeaderText}>
             Selecione um nível abaixo para visualizar o conteúdo do mangá correspondente.
           </Text>
-
-          {/* Botões para selecionar os níveis */}
           <View style={styles.levelsContainer}>
             {trailData && trailData.niveis && trailData.niveis.map((level) => (
               <TouchableOpacity
@@ -112,12 +105,17 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     marginBottom: 10,
-    paddingTop: 60, // Aumentei o espaço no topo do header
+    paddingTop: 60,
   },
   backButton: {
     marginRight: 10,
