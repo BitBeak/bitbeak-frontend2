@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import * as Font from 'expo-font'; // Pode dar algum problema aqui
+import * as Font from 'expo-font';
 import Logo from '../components/Logo';
 import EnterButton from '../components/EnterButton.js';
 import styles from '../styles/styles';

@@ -11,10 +11,9 @@ const QuestionScreen = ({ route }) => {
   const { trailNumber, challengeData, isChallenge = false, challengeId = null, idNivel = null } = route.params || {};
   
   const [questionData, setQuestionData] = useState(challengeData ? challengeData : null);
-  const [loading, setLoading] = useState(!challengeData); // Se `challengeData` estiver disponível, não precisa carregar
+  const [loading, setLoading] = useState(!challengeData);
 
   useEffect(() => {
-    // Se não for um desafio, precisamos buscar a questão
     if (!challengeData && userId && trailNumber && selectedLevel) {
       const fetchQuestionData = async () => {
         const requestBody = {
@@ -62,7 +61,6 @@ const QuestionScreen = ({ route }) => {
     );
   }
 
-  // Parâmetros iniciais para serem passados para a próxima tela
   const initialParams = {
     trailNumber: challengeData ? challengeData.idTrilha : trailNumber,
     currentQuestionIndex: 0,
@@ -74,7 +72,6 @@ const QuestionScreen = ({ route }) => {
     idNivel: idNivel || (challengeData ? challengeData.questao.idNivel : selectedLevel),
   };
 
-  // Determina qual tela de pergunta renderizar com base no tipo da questão
   switch (questionData.questao.tipo) {
     case 0:
       return (

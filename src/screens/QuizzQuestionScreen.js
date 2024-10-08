@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext'; 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomAlert from '../components/CustomAlert';
+import beautify from 'js-beautify';
 
 const QuizzQuestionScreen = ({ route }) => {
   const {
@@ -30,6 +31,28 @@ const QuizzQuestionScreen = ({ route }) => {
   const [alertMessage, setAlertMessage] = useState('');
   const [challengeModalVisible, setChallengeModalVisible] = useState(false);
   const [turnEndedModalVisible, setTurnEndedModalVisible] = useState(false);
+
+  const formatCode = (code) => {
+    return beautify.js(code, { 
+      "indent_size": "2",
+      "indent_char": " ",
+      "max_preserve_newlines": "5",
+      "preserve_newlines": true,
+      "keep_array_indentation": false,
+      "break_chained_methods": false,
+      "indent_scripts": "normal",
+      "brace_style": "collapse",
+      "space_before_conditional": false,
+      "unescape_strings": false,
+      "jslint_happy": false,
+      "end_with_newline": false,
+      "wrap_line_length": "0",
+      "indent_inner_html": false,
+      "comma_first": false,
+      "e4x": false,
+      "indent_empty_lines": false    
+    });
+  };
 
   useEffect(() => {
     setSelectedOption(null); 
@@ -82,10 +105,8 @@ const QuizzQuestionScreen = ({ route }) => {
         }
       } else if (response.status === 200) {
         if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
-          // Mostrar modal indicando que o turno foi encerrado
           setTurnEndedModalVisible(true);
         } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
-          // Mostrar modal e redirecionar para ChallengeScreen
           setChallengeModalVisible(true);
         } else if (responseData.includes('Jogo finalizado! O jogador ganhou todas as insígnias.')){
           Alert.alert(
@@ -101,7 +122,38 @@ const QuizzQuestionScreen = ({ route }) => {
             ],
             { cancelable: false }
           );
-        } else {
+        } else if (responseData.includes('Jogo finalizado. Tente novamente!')){
+          console.log(response.status);
+          Alert.alert(
+            'Jogo finalizado!',
+            'Tente novamente!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          ); 
+        } else if (responseData.includes('Parabéns! Você concluiu o nível')){
+          Alert.alert(
+            'Parabéns!',
+            'Você concluiu o nível!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } 
+        
+        else {
           const data = JSON.parse(responseData);
           const acertosDepois = data.contadorAcertos;
           const acertou = acertosDepois > correctAnswers;
@@ -147,7 +199,6 @@ const QuizzQuestionScreen = ({ route }) => {
               idNivel: isChallenge ? idNivel : selectedLevel,
             });
 
-            setShowFeedback(true);
           } else {
             console.error('Erro: A próxima questão não está devidamente definida.');
           }
@@ -224,7 +275,7 @@ const QuizzQuestionScreen = ({ route }) => {
           </View>
           {question.codigo && (
             <View style={styles.codeContainer}>
-              <Text style={styles.codeText}>{question.codigo}</Text>
+              <Text style={styles.codeText}>{formatCode(question.codigo)}</Text>
             </View>
           )}
           {question.opcoes && question.opcoes.length > 0 ? (
@@ -269,7 +320,6 @@ const QuizzQuestionScreen = ({ route }) => {
           navigation.navigate('HomeScreen');
         }}
       />
-      {/* Modal para indicar que o turno foi encerrado */}
       <Modal
         visible={turnEndedModalVisible}
         transparent={true}
@@ -293,7 +343,6 @@ const QuizzQuestionScreen = ({ route }) => {
           </View>
         </View>
       </Modal>
-      {/* Modal para navegar para a ChallengeScreen */}
       <Modal
         visible={challengeModalVisible}
         transparent={true}
@@ -322,7 +371,6 @@ const QuizzQuestionScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  // Mantive os estilos existentes
   container: {
     flex: 1,
     padding: 10,

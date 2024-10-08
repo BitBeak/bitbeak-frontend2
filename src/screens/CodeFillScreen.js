@@ -13,12 +13,14 @@ import {
   Platform,
   ScrollView,
   Modal,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AuthContext } from '../context/AuthContext';
 import CustomAlert from '../components/CustomAlert';
+import beautify from 'js-beautify';
 
 const CodeFillScreen = ({ route }) => {
   const {
@@ -56,10 +58,25 @@ const CodeFillScreen = ({ route }) => {
   }, [question]);
 
   const formatCode = (code) => {
-    return code
-      .replace(/;/g, ';\n')
-      .replace(/{/g, '{\n  ')
-      .replace(/}/g, '\n}');
+    return beautify.js(code, { 
+      "indent_size": "2",
+      "indent_char": " ",
+      "max_preserve_newlines": "5",
+      "preserve_newlines": true,
+      "keep_array_indentation": false,
+      "break_chained_methods": false,
+      "indent_scripts": "normal",
+      "brace_style": "collapse",
+      "space_before_conditional": false,
+      "unescape_strings": false,
+      "jslint_happy": false,
+      "end_with_newline": false,
+      "wrap_line_length": "0",
+      "indent_inner_html": false,
+      "comma_first": false,
+      "e4x": false,
+      "indent_empty_lines": false
+    });
   };
 
   const handleSendPress = async () => {
@@ -130,6 +147,34 @@ const CodeFillScreen = ({ route }) => {
                 text: 'OK',
                 onPress: () => {
                   navigation.navigate('ChallengesScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } else if (responseData.includes('Jogo finalizado. Tente novamente!')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Tente novamente!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } else if (responseData.includes('Parabéns! Você concluiu o nível')){
+          Alert.alert(
+            'Parabéns!',
+            'Você concluiu o nível!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
                 },
               },
             ],

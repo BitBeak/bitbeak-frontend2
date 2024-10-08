@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
@@ -26,6 +26,7 @@ const MatchColumnsScreen = ({ route }) => {
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [selectedRight, setSelectedRight] = useState(null);
   const [pairs, setPairs] = useState([]);
+  const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [nextScreenParams, setNextScreenParams] = useState(null);
@@ -40,6 +41,9 @@ const MatchColumnsScreen = ({ route }) => {
     setPairs([]);
     setShowFeedback(false);
     setIsCorrect(false);
+
+    const shuffledOptions = [...question.lacunas].sort(() => Math.random() - 0.5);
+    setShuffledRightOptions(shuffledOptions);
   }, [question]);
 
   const handleLeftSelect = (item) => {
@@ -138,7 +142,6 @@ const MatchColumnsScreen = ({ route }) => {
         }
       } else if (response.status === 200) {
         if (responseData.includes('Turno encerrado, agora é a vez do outro jogador.')) {
-          // Mostrar modal indicando que o turno foi encerrado
           setTurnEndedModalVisible(true);
         } else if (responseData.includes('Insígnia conquistada e turno encerrado, agora é a vez do outro jogador.')) {
           Alert.alert(
@@ -168,7 +171,37 @@ const MatchColumnsScreen = ({ route }) => {
             ],
             { cancelable: false }
           );
-        } else {
+        } else if (responseData.includes('Jogo finalizado. Tente novamente!')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Tente novamente!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          ); 
+        } else if (responseData.includes('Parabéns! Você concluiu o nível')){
+          Alert.alert(
+            'Parabéns!',
+            'Você concluiu o nível!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        } 
+        
+        else {
           const data = JSON.parse(responseData);
 
           const acertosAntes = correctAnswers;
@@ -319,7 +352,7 @@ const MatchColumnsScreen = ({ route }) => {
           </View>
           <View style={styles.rightColumnContainer}>
             <View style={styles.rightColumn}>
-              {question.lacunas.slice(0, Math.ceil(question.lacunas.length / 2)).map((item) => (
+              {shuffledRightOptions.slice(0, Math.ceil(shuffledRightOptions.length / 2)).map((item) => (
                 <TouchableOpacity
                   key={`${item.idLacuna}-right`}
                   style={[
@@ -335,7 +368,7 @@ const MatchColumnsScreen = ({ route }) => {
               ))}
             </View>
             <View style={styles.rightColumn}>
-              {question.lacunas.slice(Math.ceil(question.lacunas.length / 2)).map((item) => (
+              {shuffledRightOptions.slice(Math.ceil(shuffledRightOptions.length / 2)).map((item) => (
                 <TouchableOpacity
                   key={`${item.idLacuna}-right`}
                   style={[
@@ -370,7 +403,6 @@ const MatchColumnsScreen = ({ route }) => {
           navigation.navigate('HomeScreen');
         }}
       />
-      {/* Modal para indicar que o turno foi encerrado */}
       <Modal
         visible={turnEndedModalVisible}
         transparent={true}
@@ -399,7 +431,6 @@ const MatchColumnsScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  // Estilos mantidos iguais aos anteriores para consistência visual
   container: {
     flex: 1,
     padding: 10,
@@ -479,8 +510,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   rightOption: {
-    width: 160,
-    height: 70,
+    width: 165,
+    height: 155,
     backgroundColor: '#FFD700',
     borderWidth: 1,
     borderColor: '#FFFFFF',

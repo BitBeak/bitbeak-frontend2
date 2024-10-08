@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   Modal,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -126,7 +127,38 @@ const CodeQuestionScreen = ({ route }) => {
             ],
             { cancelable: false }
           );
-        } else {
+        } else if (responseData.includes('Jogo finalizado. Tente novamente!')){
+          Alert.alert(
+            'Jogo finalizado!',
+            'Tente novamente!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          ); 
+        } 
+        
+        else if (responseData.includes('Parabéns! Você concluiu o nível')){
+          Alert.alert(
+            'Parabéns!',
+            'Você concluiu o nível!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        }
+        else {
           const data = JSON.parse(responseData);
 
           const acertosAntes = correctAnswers;
@@ -288,7 +320,6 @@ const CodeQuestionScreen = ({ route }) => {
           </TouchableOpacity>
         </View>
       )}
-      {/* Modal para indicar que o turno foi encerrado */}
       <Modal
         visible={turnEndedModalVisible}
         transparent={true}
